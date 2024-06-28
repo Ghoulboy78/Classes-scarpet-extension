@@ -1,13 +1,20 @@
 package scarpetclasses.scarpet.value;
 
+import carpet.script.CarpetContext;
+import carpet.script.Context;
+import carpet.script.LazyValue;
+import carpet.script.ScriptHost;
 import carpet.script.exception.InternalExpressionException;
 import carpet.script.value.ContainerValueInterface;
 import carpet.script.value.FunctionValue;
 import carpet.script.value.Value;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.registry.DynamicRegistryManager;
+import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.util.math.BlockPos;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ClassValue extends Value implements ContainerValueInterface {
@@ -22,6 +29,11 @@ public class ClassValue extends Value implements ContainerValueInterface {
      * Whether this is the declaration of the class or an object which is a member of that class
      */
     private final boolean isObject;
+
+    /**
+     * The name of the variable which refers to the class itself in methods
+     */
+    public static final String selfReference = "self";
 
     /**
      * Defining a class
@@ -52,6 +64,17 @@ public class ClassValue extends Value implements ContainerValueInterface {
     public boolean hasField(String field) {
         return fields.containsKey(field);
     }
+
+    /**
+     * Method used to call a method in the class
+     */
+    public LazyValue callMethod(ScriptHost host, ServerCommandSource source, BlockPos origin, String name, List<Value> params){
+        FunctionValue func = methods.get(name);
+        CarpetContext cc = new CarpetContext(host, source, origin);
+        cc.setVariable(selfReference, (c, t)->this);
+        return func.callInContext(cc, Context.NONE, params);
+    }
+
 
     /**
      * This will be accessed via {@code type()} function,
@@ -109,6 +132,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
         return false;//todo possibly make this illegal (with exception for containers ofc)
     }
 
+    @Override
     public Value add(Value other) {
         return other;//todo add this stuff later
     }

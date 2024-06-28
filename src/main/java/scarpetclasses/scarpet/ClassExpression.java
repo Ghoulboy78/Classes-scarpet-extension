@@ -3,6 +3,7 @@ package scarpetclasses.scarpet;
 import carpet.script.CarpetExpression;
 import carpet.script.Expression;
 import carpet.script.exception.InternalExpressionException;
+import carpet.script.value.FunctionValue;
 import carpet.script.value.ListValue;
 import carpet.script.value.MapValue;
 import carpet.script.value.StringValue;
@@ -42,6 +43,15 @@ public class ClassExpression {
         addUnaryClassFunction(expr, "class_fields", c -> ListValue.wrap(c.fields.keySet().stream().map(StringValue::of)));
         addUnaryClassFunction(expr, "class_methods", c -> ListValue.wrap(c.methods.keySet().stream().map(StringValue::of)));
 
+
+        expr.addLazyFunction("call_function", -1, (c, t, lv) -> {
+            if (lv.size() < 2)
+                throw new InternalExpressionException("'call_function' requires at least an object and a method name to call");
+
+            ClassValue object = (ClassValue) lv.get(0).evalValue(c, t);
+            String methodName = lv.get(1).evalValue(c, t).getString();
+            return object.callMethod(c.host, cexpr.getSource(), cexpr.getOrigin(), methodName, FunctionValue.unpackArgs(lv.subList(2, lv.size()), c));
+        });
     }
 
     /**
