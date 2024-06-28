@@ -1,6 +1,5 @@
 package scarpetclasses.scarpet;
 
-import carpet.CarpetServer;
 import carpet.script.CarpetExpression;
 import carpet.script.Expression;
 import carpet.script.exception.InternalExpressionException;
@@ -8,8 +7,10 @@ import carpet.script.value.MapValue;
 import carpet.script.value.StringValue;
 import scarpetclasses.scarpet.value.ClassValue;
 
+//Temporary imports for testing purposes
 import static carpet.CarpetSettings.superSecretSetting;
 import static carpet.utils.Messenger.m;
+import static carpet.CarpetServer.minecraft_server;
 
 public class ClassExpression {
     public static void carpetApply(CarpetExpression cexpr){
