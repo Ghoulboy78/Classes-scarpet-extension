@@ -21,6 +21,10 @@ import java.util.Map;
 public class ClassValue extends Value implements ContainerValueInterface {
 
     /**
+     * The name of the variable which refers to the class itself in methods
+     */
+    public static final String selfReference = "this";
+    /**
      * The name of this user-defined class, or the name of the user-defined class that this object belongs to.
      */
     public final String className;
@@ -30,11 +34,6 @@ public class ClassValue extends Value implements ContainerValueInterface {
      * Whether this is the declaration of the class or an object which is a member of that class
      */
     private final boolean isObject;
-
-    /**
-     * The name of the variable which refers to the class itself in methods
-     */
-    public static final String selfReference = "this";
 
     /**
      * Defining a class
@@ -69,10 +68,10 @@ public class ClassValue extends Value implements ContainerValueInterface {
     /**
      * Method used to call a method in the class
      */
-    public LazyValue callMethod(ScriptHost host, ServerCommandSource source, BlockPos origin, String name, List<Value> params){
+    public LazyValue callMethod(ScriptHost host, ServerCommandSource source, BlockPos origin, String name, List<Value> params) {
         FunctionValue func = methods.get(name);
         CarpetContext cc = new CarpetContext(host, source, origin);
-        cc.setVariable(selfReference, (c, t)->this);
+        cc.setVariable(selfReference, (c, t) -> this);
         return func.callInContext(cc, Context.NONE, params);
     }
 
@@ -80,7 +79,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
     /**
      * Method used to call a method in the class, but this time with externally imposed context
      */
-    public LazyValue callMethod(Context c, String name, List<Value> params){
+    public LazyValue callMethod(Context c, String name, List<Value> params) {
         //Todo handle unknown method signature
         FunctionValue func = methods.get(name);
         Map<String, LazyValue> outer = ((FunctionValueAccessorMixin) func).getOuterState();
@@ -100,7 +99,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
      * whereas {@link ClassValue#className} will be accessed via {@code class_name()} function
      */
     @Override
-    public String getTypeString(){
+    public String getTypeString() {
         return "class";
     }
 
@@ -126,7 +125,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     @Override
     public boolean put(Value where, Value value) {//todo containers
-        if(hasMethod(where.getString()))
+        if (hasMethod(where.getString()))
             throw new InternalExpressionException("Cannot set value of method");
 
         if (!hasField(where.getString()))
