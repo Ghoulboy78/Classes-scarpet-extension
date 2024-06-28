@@ -1,17 +1,13 @@
 package scarpetclasses.scarpet.value;
 
-import carpet.script.CarpetContext;
 import carpet.script.Context;
 import carpet.script.LazyValue;
-import carpet.script.ScriptHost;
 import carpet.script.exception.InternalExpressionException;
 import carpet.script.value.ContainerValueInterface;
 import carpet.script.value.FunctionValue;
 import carpet.script.value.Value;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.util.math.BlockPos;
 import scarpetclasses.mixins.FunctionValueAccessorMixin;
 
 import java.util.HashMap;
@@ -20,20 +16,38 @@ import java.util.Map;
 
 public class ClassValue extends Value implements ContainerValueInterface {
 
+    //Todo think of a better place to store these strings
     /**
      * The name of the variable which refers to the class itself in methods
      */
     public static final String selfReference = "this";
     /**
+     * Name of the initialisation method
+     */
+    public static final String initMethodName = "init";
+    /**
+     * Name of the method which overwrites behaviour with scarpet {@code str()} function
+     */
+    public static final String stringMethodName = "str";
+    /**
+     * Name of the method which overwrites behaviour with scarpet {@code bool()} function
+     */
+    public static final String booleanMethodName = "bool";
+    /**
      * The name of this user-defined class, or the name of the user-defined class that this object belongs to.
      */
     public final String className;
-    public final Map<String, Value> fields = new HashMap<>();
-    public final Map<String, FunctionValue> methods = new HashMap<>();
     /**
      * Whether this is the declaration of the class or an object which is a member of that class
      */
-    private final boolean isObject;
+    public final boolean isObject; //todo shift this to make classes untouchable by programmer
+    private Map<String, Value> fields = new HashMap<>();
+    private Map<String, FunctionValue> methods = new HashMap<>();
+
+    /**
+     * Context from when this was declared
+     */
+    private final Context context;
 
     /**
      * Defining a class
@@ -41,8 +55,9 @@ public class ClassValue extends Value implements ContainerValueInterface {
      * @param name    Name of the user-defined class
      * @param members Map of the members (so fields and methods) of the user-defined class
      */
-    public ClassValue(String name, Map<Value, Value> members) {
+    public ClassValue(String name, Map<Value, Value> members, Context context) {
         this.className = name;
+        this.context = context;
         this.isObject = false;
         for (Map.Entry<Value, Value> entry : members.entrySet()) {
             if (entry.getValue() instanceof FunctionValue f) {
@@ -52,6 +67,24 @@ public class ClassValue extends Value implements ContainerValueInterface {
             }
         }
     }
+
+    /**
+     * Instantiating an object
+     *
+     * @param declarer The class that this is an object of
+     */
+    public ClassValue(ClassValue declarer, Context c, List<Value> params) {
+        isObject = true;
+        this.context = c;
+        className = declarer.className;
+        this.fields = declarer.fields; //todo check if I need to copy this
+        this.methods = declarer.methods;
+
+        if(methods.containsKey(initMethodName)){
+            callMethod(c, initMethodName, params);
+        }
+    }
+
 
     public boolean hasMember(String member) {
         return hasField(member) || hasMethod(member);
@@ -65,22 +98,34 @@ public class ClassValue extends Value implements ContainerValueInterface {
         return fields.containsKey(field);
     }
 
+    public Map<String, Value> getFields() {
+        return fields;
+    }
+
+    public Map<String, FunctionValue> getMethods() {
+        return methods;
+    }
+
     /**
      * Method used to call a method in the class
      */
     public LazyValue callMethod(Context c, String name, List<Value> params) {
 
-        if(!methods.containsKey(name))
-            throw new InternalExpressionException("Unkown method '"+name+"' in class '"+className+"'");
+        if (!isObject)
+            throw new InternalExpressionException("Must instantiate a class with 'new_object()' before calling a method");
+
+        if (!methods.containsKey(name))
+            throw new InternalExpressionException("Unknown method '" + name + "' in class '" + className + "'");
 
         FunctionValue func = methods.get(name);
         Map<String, LazyValue> outer = ((FunctionValueAccessorMixin) func).getOuterState();
         //If it's empty, then it gets set to null, which I totally missed out on
         //thx replaceitem
-        if(outer==null){
+        if (outer == null)
             outer = new HashMap<>();
-        }
+
         outer.put(selfReference, (_c, _t) -> this);
+        //todo This is where 'super' will go once inheritance is implemented
         ((FunctionValueAccessorMixin) func).setOuterState(outer);
         return func.callInContext(c, Context.NONE, params);
     }
@@ -97,17 +142,21 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     @Override
     public String getString() {
-        if (hasMethod("str")) {
-            methods.get("str"); //Idk how to do this
+        if (isObject && hasMethod(stringMethodName)) {
+            return callMethod(context, stringMethodName, List.of()).evalValue(context).getString();
         }
 
-        //Making distinction between a class declaration and an object belonging to that class
-        return (isObject ? "Object-" : "Class-") + className + "@";// + this.hashCode();
+        //Making distinction between a class declaration and an object belonging to a class
+        return (isObject ? "Object@" : "Class@") + className;// + this.hashCode();
     }
 
     @Override
     public boolean getBoolean() {
-        return false;//todo
+        if (isObject && hasMethod(booleanMethodName)) {
+            return callMethod(context, booleanMethodName, List.of()).evalValue(context, Context.BOOLEAN).getBoolean();
+        }
+
+        return isObject;
     }
 
     @Override
@@ -117,11 +166,14 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     @Override
     public boolean put(Value where, Value value) {//todo containers
+        if (!isObject)
+            throw new InternalExpressionException("Must instantiate a class before modifying its fields");
+
         if (hasMethod(where.getString()))
             throw new InternalExpressionException("Cannot set value of method");
 
         if (!hasField(where.getString()))
-            throw new InternalExpressionException("Tried to set value of nonexistant field: '" + where.getString() + "' in class of type '" + className + "'");
+            throw new InternalExpressionException("Tried to set value of nonexistent field: '" + where.getString() + "' in class of type '" + className + "'");
         boolean res = !value.equals(fields.get(where.getString()));
         fields.put(where.getString(), value);
         return res;
@@ -129,6 +181,8 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     @Override
     public Value get(Value where) {//todo containers
+        if (!isObject)
+            throw new InternalExpressionException("Must instantiate a class before accessing its fields");
         return fields.getOrDefault(where.getString(), NULL);
     }
 

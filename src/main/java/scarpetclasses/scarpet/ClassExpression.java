@@ -15,7 +15,6 @@ import java.util.function.Function;
 //Temporary imports for testing purposes
 import static carpet.CarpetSettings.superSecretSetting;
 import static carpet.utils.Messenger.m;
-import static carpet.CarpetServer.minecraft_server;
 
 public class ClassExpression {
 
@@ -26,12 +25,12 @@ public class ClassExpression {
             ClassValue newClass;
 
             if (superSecretSetting) {
-                m(minecraft_server.getCommandSource(), "gi new class name: " + lv.get(0).getString());
-                m(minecraft_server.getCommandSource(), "gi new class params: " + lv.get(1).getString());
+                m(cexpr.getSource(), "gi new class name: " + lv.get(0).getString());
+                m(cexpr.getSource(), "gi new class params: " + lv.get(1).getString());
             }
 
             if (lv.get(1) instanceof MapValue map)
-                newClass = new ClassValue(lv.get(0).getString(), map.getMap());
+                newClass = new ClassValue(lv.get(0).getString(), map.getMap(), c);
             else
                 throw new InternalExpressionException("Must declare a class with a map of fields and methods.");
 
@@ -39,9 +38,27 @@ public class ClassExpression {
         });
 
         addUnaryClassFunction(expr, "class_name", c -> StringValue.of(c.className));
-        addUnaryClassFunction(expr, "class_fields", c -> ListValue.wrap(c.fields.keySet().stream().map(StringValue::of)));
-        addUnaryClassFunction(expr, "class_methods", c -> ListValue.wrap(c.methods.keySet().stream().map(StringValue::of)));
+        addUnaryClassFunction(expr, "class_fields", c -> ListValue.wrap(c.getFields().keySet().stream().map(StringValue::of)));
+        addUnaryClassFunction(expr, "class_methods", c -> ListValue.wrap(c.getMethods().keySet().stream().map(StringValue::of)));
 
+        expr.addContextFunction("new_object", -1, (c, t, lv) -> {
+            if (lv.size() < 1)
+                throw new InternalExpressionException("'new_object' requires at least a class definition");
+
+            Value v = lv.get(0);
+            if (!(v instanceof ClassValue cv))
+                throw new InternalExpressionException("First argument to 'new_object' must be of type class, not '" + v.getTypeString() + "'");
+
+            if (cv.isObject)
+                throw new InternalExpressionException("Cannot instantiate an object with another object, '" + cv.boundVariable + "' is already an instance of '" + cv.className + "'");
+
+            ClassValue newObject = new ClassValue(cv, c, lv.subList(1, lv.size()));
+
+            if(superSecretSetting)
+                m(cexpr.getSource(), "gi New object: "+newObject.getString());
+
+            return newObject;
+        });
 
         expr.addLazyFunction("call_function", -1, (c, t, lv) -> {
             if (lv.size() < 2)
