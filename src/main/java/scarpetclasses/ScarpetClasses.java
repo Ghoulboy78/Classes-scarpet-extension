@@ -10,8 +10,7 @@ public class ScarpetClasses implements CarpetExtension, ModInitializer {
 
     @Override
     public void scarpetApi(CarpetExpression carpetExpression){
-        ClassExpression.carpetApply(carpetExpression);
-        ClassExpression.apply(carpetExpression.getExpr());
+        ClassExpression.apply(carpetExpression);
     }
 
     @Override

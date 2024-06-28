@@ -13,11 +13,11 @@ import static carpet.utils.Messenger.m;
 import static carpet.CarpetServer.minecraft_server;
 
 public class ClassExpression {
-    public static void carpetApply(CarpetExpression cexpr){
 
-    }
+    public static void apply(CarpetExpression cexpr){
 
-    public static void apply(Expression expr){
+        Expression expr = cexpr.getExpr();
+
         expr.addContextFunction("new_class", 2, (c, t, lv)->{
             ClassValue newClass;
 
