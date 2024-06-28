@@ -27,3 +27,5 @@ bin/
 
 /run/
 /site/
+/.gradle/
+/build/

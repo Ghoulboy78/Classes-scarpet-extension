@@ -18,3 +18,10 @@
 /script run new_class('Hi', {})
 /script run new_class()
 /script run new_class('a', {})
+/script run c = new_class('A', {'A'->'a', 'B'->'b'})
+/script run c = new_class('A', {'A'->'a', 'B'->'b'}); c
+/script run c = new_class('A', {'A'->'a', 'B'->'b'}); print(c)
+/carpet superSecretSetting true
+/carpet setDefault superSecretSetting true
+/script load test
+/script run c = new_class('A', {'A'->'a', 'B'->'b'}); print(c)
