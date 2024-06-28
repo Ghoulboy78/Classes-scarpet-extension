@@ -1,1 +1,20 @@
 /carpet
+/script run new_class
+/script run new_class()
+/script run new_class
+/script run new_class()
+/script run new_clas()
+/script run new_class()
+/script run new_class('Class', {})
+/script run new_class('Class', {'A', 'b'})
+/script run new_class('Class', {'A'-> 'b'})
+/script run c=new_class('Class', {'A'-> 'b'})
+/script run c=new_class('Class', {'A'-> 'b'}); c
+/script run c=new_class('Class', {'A'-> 'b'}); print(c)
+/script run new_class()
+/script run new_class('Hello', {)
+/script run new_class('Hello', {})
+/script run new_class('Hello', {'A'->'b'})
+/script run new_class('Hi', {})
+/script run new_class()
+/script run new_class('a', {})

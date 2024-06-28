@@ -2,50 +2,20 @@ package scarpetclasses;
 
 import carpet.CarpetExtension;
 import carpet.CarpetServer;
-import carpet.api.settings.SettingsManager;
-import com.mojang.brigadier.CommandDispatcher;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
+import carpet.script.CarpetExpression;
+import net.fabricmc.api.ModInitializer;
+import scarpetclasses.scarpet.ClassExpression;
 
-public class ScarpetClasses implements CarpetExtension
-{
-    public static void noop() { }
-    private static SettingsManager mySettingManager;
-    static
-    {
-        mySettingManager = new SettingsManager("1.0","examplemod","Example Mod");
-        CarpetServer.manageExtension(new ScarpetClasses());
+public class ScarpetClasses implements CarpetExtension, ModInitializer {
+
+    @Override
+    public void scarpetApi(CarpetExpression carpetExpression){
+        ClassExpression.carpetApply(carpetExpression);
+        ClassExpression.apply(carpetExpression.getExpr());
     }
 
     @Override
-    public void onGameStarted()
-    {
-
-    }
-
-    @Override
-    public void onServerLoaded(MinecraftServer server)
-    {
-        // reloading of /carpet settings is handled by carpet
-        // reloading of own settings is handled as an extension, since we claim own settings manager
-    }
-
-    @Override
-    public void onTick(MinecraftServer server)
-    {
-        // no need to add this.
-    }
-
-    @Override
-    public void onPlayerLoggedIn(ServerPlayerEntity player)
-    {
-        //
-    }
-
-    @Override
-    public void onPlayerLoggedOut(ServerPlayerEntity player)
-    {
-        //
+    public void onInitialize() {
+        CarpetServer.manageExtension(this);
     }
 }
