@@ -9,8 +9,9 @@ import java.util.Map;
 
 @Mixin(FunctionValue.class)
 public interface FunctionValueAccessorMixin {
-    @Accessor("outerState")
+    @Accessor(value = "outerState", remap = false)
     Map<String, LazyValue> getOuterState();
-    @Accessor("outerState")
+
+    @Accessor(value = "outerState", remap = false)
     void setOuterState(Map<String, LazyValue> newState);
 }

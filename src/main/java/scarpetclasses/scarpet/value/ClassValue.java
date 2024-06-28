@@ -84,7 +84,12 @@ public class ClassValue extends Value implements ContainerValueInterface {
         //Todo handle unknown method signature
         FunctionValue func = methods.get(name);
         Map<String, LazyValue> outer = ((FunctionValueAccessorMixin) func).getOuterState();
-        outer.put(selfReference, (_c, _t)->this);
+        //If it's empty, then it gets set to null, which I totally missed out on
+        //thx replaceitem
+        if(outer==null){
+            outer = new HashMap<>();
+        }
+        outer.put(selfReference, (_c, _t) -> this);
         ((FunctionValueAccessorMixin) func).setOuterState(outer);
         return func.callInContext(c, Context.NONE, params);
     }
