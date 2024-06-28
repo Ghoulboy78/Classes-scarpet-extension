@@ -68,19 +68,11 @@ public class ClassValue extends Value implements ContainerValueInterface {
     /**
      * Method used to call a method in the class
      */
-    public LazyValue callMethod(ScriptHost host, ServerCommandSource source, BlockPos origin, String name, List<Value> params) {
-        FunctionValue func = methods.get(name);
-        CarpetContext cc = new CarpetContext(host, source, origin);
-        cc.setVariable(selfReference, (c, t) -> this);
-        return func.callInContext(cc, Context.NONE, params);
-    }
-
-
-    /**
-     * Method used to call a method in the class, but this time with externally imposed context
-     */
     public LazyValue callMethod(Context c, String name, List<Value> params) {
-        //Todo handle unknown method signature
+
+        if(!methods.containsKey(name))
+            throw new InternalExpressionException("Unkown method '"+name+"' in class '"+className+"'");
+
         FunctionValue func = methods.get(name);
         Map<String, LazyValue> outer = ((FunctionValueAccessorMixin) func).getOuterState();
         //If it's empty, then it gets set to null, which I totally missed out on
