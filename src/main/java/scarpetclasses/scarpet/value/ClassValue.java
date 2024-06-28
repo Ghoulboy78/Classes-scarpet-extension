@@ -17,22 +17,31 @@ import java.util.Map;
 public class ClassValue extends Value implements ContainerValueInterface {
 
     //Todo think of a better place to store these strings
+
     /**
-     * The name of the variable which refers to the class itself in methods
+     * Static class which contains all the keywords for classes, such as the name of the initialisation method
+     * ({@link KeywordNames#initMethodName}), or the variable used for self-reference within methods
+     * ({@link KeywordNames#selfReference}).
      */
-    public static final String selfReference = "this";
-    /**
-     * Name of the initialisation method
-     */
-    public static final String initMethodName = "init";
-    /**
-     * Name of the method which overwrites behaviour with scarpet {@code str()} function
-     */
-    public static final String stringMethodName = "str";
-    /**
-     * Name of the method which overwrites behaviour with scarpet {@code bool()} function
-     */
-    public static final String booleanMethodName = "bool";
+    public static class KeywordNames {
+        /**
+         * The name of the variable which refers to the class itself in methods
+         */
+        public static final String selfReference = "this";
+        /**
+         * Name of the initialisation method
+         */
+        public static final String initMethodName = "init";
+        /**
+         * Name of the method which overwrites behaviour with scarpet {@code str()} function
+         */
+        public static final String stringMethodName = "str";
+        /**
+         * Name of the method which overwrites behaviour with scarpet {@code bool()} function
+         */
+        public static final String booleanMethodName = "bool";
+    }
+
     /**
      * The name of this user-defined class, or the name of the user-defined class that this object belongs to.
      */
@@ -80,9 +89,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
         this.fields = declarer.fields; //todo check if I need to copy this
         this.methods = declarer.methods;
 
-        if(methods.containsKey(initMethodName)){
-            callMethod(c, initMethodName, params);
-        }
+        initializeCall(params);
     }
 
 
@@ -107,6 +114,28 @@ public class ClassValue extends Value implements ContainerValueInterface {
     }
 
     /**
+     * Special private call to initialise, to ensure no one tries to initialise without using proper initialisation function
+     */
+    private void initializeCall(List<Value> params){
+        if(methods.containsKey(KeywordNames.initMethodName)){
+            FunctionValue initFunc = methods.get(KeywordNames.initMethodName);
+            Map<String, LazyValue> outer = ((FunctionValueAccessorMixin) initFunc).getOuterState();
+
+            if (outer != null)
+                throw new InternalExpressionException("How did we get here? Had non-null outer scope at initialisation, make an issue at https://github.com/Ghoulboy78/Classes-scarpet-extension/issues");
+
+            outer = new HashMap<>();
+            outer.put(KeywordNames.selfReference, (_c, _t) -> this);
+            //todo This is where 'super' will go once inheritance is implemented
+            ((FunctionValueAccessorMixin) initFunc).setOuterState(outer);
+            initFunc.callInContext(context, Context.NONE, params);
+
+            //No need to let the programmer re-initialise an initialised object
+            methods.remove(KeywordNames.initMethodName);
+        }
+    }
+
+    /**
      * Method used to call a method in the class
      */
     public LazyValue callMethod(Context c, String name, List<Value> params) {
@@ -117,6 +146,9 @@ public class ClassValue extends Value implements ContainerValueInterface {
         if (!methods.containsKey(name))
             throw new InternalExpressionException("Unknown method '" + name + "' in class '" + className + "'");
 
+        if (name.equals(KeywordNames.initMethodName))
+            throw new InternalExpressionException("Tried to initialise a class improperly, note that this must be done with 'new_object()' function to avoid unwanted side-effects (and ensure wanted ones)");
+
         FunctionValue func = methods.get(name);
         Map<String, LazyValue> outer = ((FunctionValueAccessorMixin) func).getOuterState();
         //If it's empty, then it gets set to null, which I totally missed out on
@@ -124,7 +156,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
         if (outer == null)
             outer = new HashMap<>();
 
-        outer.put(selfReference, (_c, _t) -> this);
+        outer.put(KeywordNames.selfReference, (_c, _t) -> this);
         //todo This is where 'super' will go once inheritance is implemented
         ((FunctionValueAccessorMixin) func).setOuterState(outer);
         return func.callInContext(c, Context.NONE, params);
@@ -142,8 +174,8 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     @Override
     public String getString() {
-        if (isObject && hasMethod(stringMethodName)) {
-            return callMethod(context, stringMethodName, List.of()).evalValue(context).getString();
+        if (isObject && hasMethod(KeywordNames.stringMethodName)) {
+            return callMethod(context, KeywordNames.stringMethodName, List.of()).evalValue(context).getString();
         }
 
         //Making distinction between a class declaration and an object belonging to a class
@@ -152,8 +184,8 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     @Override
     public boolean getBoolean() {
-        if (isObject && hasMethod(booleanMethodName)) {
-            return callMethod(context, booleanMethodName, List.of()).evalValue(context, Context.BOOLEAN).getBoolean();
+        if (isObject && hasMethod(KeywordNames.booleanMethodName)) {
+            return callMethod(context, KeywordNames.booleanMethodName, List.of()).evalValue(context, Context.BOOLEAN).getBoolean();
         }
 
         return isObject;
