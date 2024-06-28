@@ -53,6 +53,15 @@ public class ClassValue extends Value implements ContainerValueInterface {
         return fields.containsKey(field);
     }
 
+    /**
+     * This will be accessed via {@code type()} function,
+     * whereas {@link ClassValue#className} will be accessed via {@code class_name()} function
+     */
+    @Override
+    public String getTypeString(){
+        return "class";
+    }
+
     @Override
     public String getString() {
         if (hasMethod("str")) {
