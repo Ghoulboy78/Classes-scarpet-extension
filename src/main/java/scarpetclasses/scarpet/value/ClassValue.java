@@ -84,6 +84,9 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     @Override
     public boolean put(Value where, Value value) {//todo containers
+        if(hasMethod(where.getString()))
+            throw new InternalExpressionException("Cannot set value of method");
+
         if (!hasField(where.getString()))
             throw new InternalExpressionException("Tried to set value of nonexistant field: '" + where.getString() + "' in class of type '" + className + "'");
         boolean res = !value.equals(fields.get(where.getString()));
