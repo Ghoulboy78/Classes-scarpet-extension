@@ -3,7 +3,6 @@ package scarpetclasses.scarpet.value;
 import carpet.script.exception.InternalExpressionException;
 import carpet.script.value.ContainerValueInterface;
 import carpet.script.value.FunctionValue;
-import carpet.script.value.MapValue;
 import carpet.script.value.Value;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.registry.DynamicRegistryManager;
@@ -17,16 +16,17 @@ public class ClassValue extends Value implements ContainerValueInterface {
      * The name of this user-defined class, or the name of the user-defined class that this object belongs to.
      */
     public final String className;
+    public final Map<String, Value> fields = new HashMap<>();
+    public final Map<String, FunctionValue> methods = new HashMap<>();
     /**
      * Whether this is the declaration of the class or an object which is a member of that class
      */
     private final boolean isObject;
-    public final Map<String, Value> fields = new HashMap<>();
-    public final Map<String, FunctionValue> methods = new HashMap<>();
 
     /**
      * Defining a class
-     * @param name Name of the user-defined class
+     *
+     * @param name    Name of the user-defined class
      * @param members Map of the members (so fields and methods) of the user-defined class
      */
     public ClassValue(String name, Map<Value, Value> members) {
@@ -60,7 +60,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
         }
 
         //Making distinction between a class declaration and an object belonging to that class
-        return (isObject? "Object" : "Class-")+ className + "@" + this.hashCode();
+        return (isObject ? "Object" : "Class-") + className + "@" + this.hashCode();
     }
 
     @Override
@@ -75,7 +75,8 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     @Override
     public boolean put(Value where, Value value) {//todo containers
-        if (!hasField(where.getString())) throw new InternalExpressionException("Tried to set value of nonexistant field: "+where.getString());
+        if (!hasField(where.getString()))
+            throw new InternalExpressionException("Tried to set value of nonexistant field: '" + where.getString() + "' in class of type '" + className + "'");
         boolean res = !value.equals(fields.get(where.getString()));
         fields.put(where.getString(), value);
         return res;
@@ -96,7 +97,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
         return false;//todo possibly make this illegal (with exception for containers ofc)
     }
 
-    public Value add(Value other){
+    public Value add(Value other) {
         return other;//todo add this stuff later
     }
 }
