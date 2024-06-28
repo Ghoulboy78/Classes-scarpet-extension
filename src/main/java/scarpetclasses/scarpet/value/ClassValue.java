@@ -12,6 +12,7 @@ import net.minecraft.nbt.NbtElement;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.util.math.BlockPos;
+import scarpetclasses.mixins.FunctionValueAccessorMixin;
 
 import java.util.HashMap;
 import java.util.List;
@@ -33,7 +34,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
     /**
      * The name of the variable which refers to the class itself in methods
      */
-    public static final String selfReference = "self";
+    public static final String selfReference = "this";
 
     /**
      * Defining a class
@@ -77,6 +78,19 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
 
     /**
+     * Method used to call a method in the class, but this time with externally imposed context
+     */
+    public LazyValue callMethod(Context c, String name, List<Value> params){
+        //Todo handle unknown method signature
+        FunctionValue func = methods.get(name);
+        Map<String, LazyValue> outer = ((FunctionValueAccessorMixin) func).getOuterState();
+        outer.put(selfReference, (_c, _t)->this);
+        ((FunctionValueAccessorMixin) func).setOuterState(outer);
+        return func.callInContext(c, Context.NONE, params);
+    }
+
+
+    /**
      * This will be accessed via {@code type()} function,
      * whereas {@link ClassValue#className} will be accessed via {@code class_name()} function
      */
@@ -92,7 +106,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
         }
 
         //Making distinction between a class declaration and an object belonging to that class
-        return (isObject ? "Object" : "Class-") + className + "@" + this.hashCode();
+        return (isObject ? "Object-" : "Class-") + className + "@";// + this.hashCode();
     }
 
     @Override

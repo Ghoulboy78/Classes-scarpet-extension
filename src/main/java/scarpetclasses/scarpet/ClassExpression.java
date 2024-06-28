@@ -20,7 +20,6 @@ import static carpet.CarpetServer.minecraft_server;
 public class ClassExpression {
 
     public static void apply(CarpetExpression cexpr) {
-
         Expression expr = cexpr.getExpr();
 
         expr.addContextFunction("new_class", 2, (c, t, lv) -> {
@@ -50,7 +49,8 @@ public class ClassExpression {
 
             ClassValue object = (ClassValue) lv.get(0).evalValue(c, t);
             String methodName = lv.get(1).evalValue(c, t).getString();
-            return object.callMethod(c.host, cexpr.getSource(), cexpr.getOrigin(), methodName, FunctionValue.unpackArgs(lv.subList(2, lv.size()), c));
+
+            return object.callMethod(c, methodName, FunctionValue.unpackArgs(lv.subList(2, lv.size()), c));
         });
     }
 
