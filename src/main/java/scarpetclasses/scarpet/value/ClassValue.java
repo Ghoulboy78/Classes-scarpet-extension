@@ -28,82 +28,19 @@ public class ClassValue extends Value implements ContainerValueInterface {
     //Todo think of a better place to store these strings
 
     /**
-     * Static class which contains all the keywords for classes, such as the name of the initialisation method
-     * ({@link KeywordNames#initMethodName}), or the variable used for self-reference within methods
-     * ({@link KeywordNames#selfReference}).
-     */
-    public static class KeywordNames {
-        /**
-         * The name of the variable which refers to the class itself in methods
-         */
-        public static final String selfReference = "this";
-        /**
-         * Name of the initialisation method
-         */
-        public static final String initMethodName = "init";
-        /**
-         * Name of the method which overwrites behaviour with scarpet {@code str()} function
-         */
-        public static final String stringMethodName = "str";
-        /**
-         * Name of the method which overwrites behaviour with scarpet {@code bool()} function
-         */
-        public static final String booleanMethodName = "bool";
-        /**
-         * Currently unused.
-         */
-        public static final String prettyStringMethodName = "pretty_str";
-        /**
-         * Name of the method which overwrites behaviour with scarpet {@code length()} function
-         */
-        public static final String lengthMethodName = "length";
-        /**
-         * Name of the method which overwrites behaviour with scarpet {@code slice()} function
-         */
-        public static final String sliceMethodName = "slice";
-        /**
-         * Name of the method which overwrites behaviour with scarpet {@code split()} function
-         */
-        public static final String splitMethodName = "split";
-        /**
-         * Name of the method which overwrites behaviour with scarpet {@code hash_code()} function
-         */
-        public static final String hashMethodName = "hash_code";//todo implement variant counter like in FunctionValue for dfault behaviour
-        /**
-         * Name of the method which overwrites behaviour with scarpet {@code copy()} function
-         */
-        public static final String deepCopyMethodName = "copy";
-        /**
-         * Name of the method which overwrites behaviour with scarpet {@code encode_nbt()} function
-         * todo make a note that reverse operation is prolly not possible
-         */
-        public static final String makeNBTMethodName = "to_nbt";
-        /**
-         * Name of the method which overwrites behaviour with scarpet {@code encode_json()} function
-         * todo make a note that reverse operation is prolly not possible
-         */
-        public static final String makeJSONMethodName = "to_json";
-        /**
-         * Name of the method which overwrites behaviour with scarpet {@code encode_b64()} function
-         */
-        public static final String makeB64MethodName = "to_b64";
-    }
-
-    /**
      * The name of this user-defined class, or the name of the user-defined class that this object belongs to.
      */
     public final String className;
+    /**
+     * Context from when this was declared
+     */
+    private final Context context;
     /**
      * Whether this is the declaration of the class or an object which is a member of that class
      */
     private boolean isObject; //todo shift this to make classes untouchable by programmer
     private Map<String, Value> fields = new HashMap<>();
     private Map<String, FunctionValue> methods = new HashMap<>();
-
-    /**
-     * Context from when this was declared
-     */
-    private final Context context;
 
     /**
      * Defining a class
@@ -139,7 +76,6 @@ public class ClassValue extends Value implements ContainerValueInterface {
         initializeCall(params);
     }
 
-
     public boolean hasMember(String member) {
         return hasField(member) || hasMethod(member);
     }
@@ -152,7 +88,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
         return fields.containsKey(field);
     }
 
-    public boolean isObject(){
+    public boolean isObject() {
         return isObject;
     }
 
@@ -167,8 +103,8 @@ public class ClassValue extends Value implements ContainerValueInterface {
     /**
      * Special private call to initialise, to ensure no one tries to initialise without using proper initialisation function
      */
-    private void initializeCall(List<Value> params){
-        if(methods.containsKey(KeywordNames.initMethodName)){
+    private void initializeCall(List<Value> params) {
+        if (methods.containsKey(KeywordNames.initMethodName)) {
             FunctionValue initFunc = methods.get(KeywordNames.initMethodName);
             Map<String, LazyValue> outer = ((FunctionValueAccessorMixin) initFunc).getOuterState();
 
@@ -252,30 +188,30 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     @Override
     public Value deepcopy() {//todo change this one big time when I change implementation of classes
-        if (isObject && hasMethod(KeywordNames.deepCopyMethodName)){
+        if (isObject && hasMethod(KeywordNames.deepCopyMethodName)) {
             return callMethod(context, KeywordNames.deepCopyMethodName, List.of()).evalValue(context);
         }
 
         Map<Value, Value> members = new HashMap<>();
-        fields.forEach((s, v)->members.put(StringValue.of(s), v.deepcopy()));
-        methods.forEach((s, fv)->members.put(StringValue.of(s), fv.deepcopy()));
+        fields.forEach((s, v) -> members.put(StringValue.of(s), v.deepcopy()));
+        methods.forEach((s, fv) -> members.put(StringValue.of(s), fv.deepcopy()));
         ClassValue copyClass = new ClassValue(className, members, context.recreate());
         copyClass.isObject = this.isObject;
         return copyClass;
     }
 
     @Override
-    public int hashCode(){
-        if (isObject && hasMethod(KeywordNames.hashMethodName)){
+    public int hashCode() {
+        if (isObject && hasMethod(KeywordNames.hashMethodName)) {
             return (int) callMethod(context, KeywordNames.hashMethodName, List.of()).evalValue(context).readInteger();
         }
 
-        return fields.hashCode() + methods.hashCode()+className.hashCode() + (isObject? 1:0);
+        return fields.hashCode() + methods.hashCode() + className.hashCode() + (isObject ? 1 : 0);
     }
 
     @Override
     public Value split(Value delimiter) {
-        if (isObject && hasMethod(KeywordNames.splitMethodName)){
+        if (isObject && hasMethod(KeywordNames.splitMethodName)) {
             return callMethod(context, KeywordNames.splitMethodName, List.of(delimiter)).evalValue(context);
         }
 
@@ -284,7 +220,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     @Override
     public Value slice(long from, Long to) {
-        if (isObject && hasMethod(KeywordNames.sliceMethodName)){
+        if (isObject && hasMethod(KeywordNames.sliceMethodName)) {
             return callMethod(context, KeywordNames.sliceMethodName, List.of(NumericValue.of(from), NumericValue.of(to))).evalValue(context);
         }
 
@@ -292,8 +228,8 @@ public class ClassValue extends Value implements ContainerValueInterface {
     }
 
     @Override
-    public NbtElement toTag(boolean force, DynamicRegistryManager regs) {//todo make note that this is not reversible
-        if (isObject && hasMethod(KeywordNames.makeNBTMethodName)){
+    public NbtElement toTag(boolean force, DynamicRegistryManager regs) {
+        if (isObject && hasMethod(KeywordNames.makeNBTMethodName)) {
             return ((NBTSerializableValue) callMethod(context, KeywordNames.makeNBTMethodName, List.of()).evalValue(context)).getTag();
         }
         throw new NBTSerializableValue.IncompatibleTypeException(this);
@@ -301,16 +237,15 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     @Override
     public JsonElement toJson() {
-        if (isObject && hasMethod(KeywordNames.makeJSONMethodName)){
+        if (isObject && hasMethod(KeywordNames.makeJSONMethodName)) {
             //Make sure to use MapValue's toJson() instead of Value's toJson()
             return ((MapValue) callMethod(context, KeywordNames.makeJSONMethodName, List.of()).evalValue(context)).toJson();
         }
         throw new ThrowStatement(this, Throwables.JSON_ERROR);
     }
 
-
     public Value toBase64() {
-        if (isObject && hasMethod(KeywordNames.makeB64MethodName)){
+        if (isObject && hasMethod(KeywordNames.makeB64MethodName)) {
             return callMethod(context, KeywordNames.makeB64MethodName, List.of()).evalValue(context);
         }
         return StringValue.of(Base64.getEncoder().encodeToString(getString().getBytes(StandardCharsets.UTF_8)));
@@ -351,5 +286,67 @@ public class ClassValue extends Value implements ContainerValueInterface {
     @Override
     public Value add(Value other) {
         return other;//todo add this stuff later
+    }
+
+    /**
+     * Static class which contains all the keywords for classes, such as the name of the initialisation method
+     * ({@link KeywordNames#initMethodName}), or the variable used for self-reference within methods
+     * ({@link KeywordNames#selfReference}).
+     */
+    public static class KeywordNames {
+        /**
+         * The name of the variable which refers to the class itself in methods
+         */
+        public static final String selfReference = "this";
+        /**
+         * Name of the initialisation method
+         */
+        public static final String initMethodName = "init";
+        /**
+         * Name of the method which overwrites behaviour with scarpet {@code str()} function
+         */
+        public static final String stringMethodName = "str";
+        /**
+         * Name of the method which overwrites behaviour with scarpet {@code bool()} function
+         */
+        public static final String booleanMethodName = "bool";
+        /**
+         * Currently unused.
+         */
+        public static final String prettyStringMethodName = "pretty_str";
+        /**
+         * Name of the method which overwrites behaviour with scarpet {@code length()} function
+         */
+        public static final String lengthMethodName = "length";
+        /**
+         * Name of the method which overwrites behaviour with scarpet {@code slice()} function
+         */
+        public static final String sliceMethodName = "slice";
+        /**
+         * Name of the method which overwrites behaviour with scarpet {@code split()} function
+         */
+        public static final String splitMethodName = "split";
+        /**
+         * Name of the method which overwrites behaviour with scarpet {@code hash_code()} function
+         */
+        public static final String hashMethodName = "hash_code";//todo implement class variant counter like in FunctionValue for dfault behaviour
+        /**
+         * Name of the method which overwrites behaviour with scarpet {@code copy()} function
+         */
+        public static final String deepCopyMethodName = "copy";
+        /**
+         * Name of the method which overwrites behaviour with scarpet {@code encode_nbt()} function
+         * todo make a note that reverse operation is prolly not possible
+         */
+        public static final String makeNBTMethodName = "to_nbt";
+        /**
+         * Name of the method which overwrites behaviour with scarpet {@code encode_json()} function
+         * todo make a note that reverse operation is prolly not possible
+         */
+        public static final String makeJSONMethodName = "to_json";
+        /**
+         * Name of the method which overwrites behaviour with scarpet {@code encode_b64()} function
+         */
+        public static final String makeB64MethodName = "to_b64";
     }
 }
