@@ -49,7 +49,7 @@ public class ClassExpression {
             if (!(v instanceof ClassValue cv))
                 throw new InternalExpressionException("First argument to 'new_object' must be of type class, not '" + v.getTypeString() + "'");
 
-            if (cv.isObject)
+            if (cv.isObject())
                 throw new InternalExpressionException("Cannot instantiate an object with another object, '" + cv.boundVariable + "' is already an instance of '" + cv.className + "'");
 
             ClassValue newObject = new ClassValue(cv, c, lv.subList(1, lv.size()));

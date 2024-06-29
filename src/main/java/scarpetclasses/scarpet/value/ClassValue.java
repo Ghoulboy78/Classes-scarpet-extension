@@ -96,7 +96,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
     /**
      * Whether this is the declaration of the class or an object which is a member of that class
      */
-    public final boolean isObject; //todo shift this to make classes untouchable by programmer
+    private boolean isObject; //todo shift this to make classes untouchable by programmer
     private Map<String, Value> fields = new HashMap<>();
     private Map<String, FunctionValue> methods = new HashMap<>();
 
@@ -150,6 +150,10 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     public boolean hasField(String field) {
         return fields.containsKey(field);
+    }
+
+    public boolean isObject(){
+        return isObject;
     }
 
     public Map<String, Value> getFields() {
@@ -208,7 +212,6 @@ public class ClassValue extends Value implements ContainerValueInterface {
         ((FunctionValueAccessorMixin) func).setOuterState(outer);
         return func.callInContext(c, Context.NONE, params);
     }
-
 
     /**
      * This will be accessed via {@code type()} function,
