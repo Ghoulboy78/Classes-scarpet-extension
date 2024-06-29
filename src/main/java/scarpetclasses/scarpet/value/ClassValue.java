@@ -3,13 +3,22 @@ package scarpetclasses.scarpet.value;
 import carpet.script.Context;
 import carpet.script.LazyValue;
 import carpet.script.exception.InternalExpressionException;
+import carpet.script.exception.ThrowStatement;
+import carpet.script.exception.Throwables;
 import carpet.script.value.ContainerValueInterface;
 import carpet.script.value.FunctionValue;
+import carpet.script.value.MapValue;
+import carpet.script.value.NBTSerializableValue;
+import carpet.script.value.NumericValue;
+import carpet.script.value.StringValue;
 import carpet.script.value.Value;
+import com.google.gson.JsonElement;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.registry.DynamicRegistryManager;
 import scarpetclasses.mixins.FunctionValueAccessorMixin;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +49,44 @@ public class ClassValue extends Value implements ContainerValueInterface {
          * Name of the method which overwrites behaviour with scarpet {@code bool()} function
          */
         public static final String booleanMethodName = "bool";
+        /**
+         * Currently unused.
+         */
+        public static final String prettyStringMethodName = "pretty_str";
+        /**
+         * Name of the method which overwrites behaviour with scarpet {@code length()} function
+         */
+        public static final String lengthMethodName = "length";
+        /**
+         * Name of the method which overwrites behaviour with scarpet {@code slice()} function
+         */
+        public static final String sliceMethodName = "slice";
+        /**
+         * Name of the method which overwrites behaviour with scarpet {@code split()} function
+         */
+        public static final String splitMethodName = "split";
+        /**
+         * Name of the method which overwrites behaviour with scarpet {@code hash_code()} function
+         */
+        public static final String hashMethodName = "hash_code";//todo implement variant counter like in FunctionValue for dfault behaviour
+        /**
+         * Name of the method which overwrites behaviour with scarpet {@code copy()} function
+         */
+        public static final String deepCopyMethodName = "copy";
+        /**
+         * Name of the method which overwrites behaviour with scarpet {@code encode_nbt()} function
+         * todo make a note that reverse operation is prolly not possible
+         */
+        public static final String makeNBTMethodName = "to_nbt";
+        /**
+         * Name of the method which overwrites behaviour with scarpet {@code encode_json()} function
+         * todo make a note that reverse operation is prolly not possible
+         */
+        public static final String makeJSONMethodName = "to_json";
+        /**
+         * Name of the method which overwrites behaviour with scarpet {@code encode_b64()} function
+         */
+        public static final String makeB64MethodName = "to_b64";
     }
 
     /**
@@ -192,8 +239,78 @@ public class ClassValue extends Value implements ContainerValueInterface {
     }
 
     @Override
-    public NbtElement toTag(boolean force, DynamicRegistryManager regs) {
-        return null;//todo
+    public int length() {
+        if (isObject && hasMethod(KeywordNames.lengthMethodName)) {
+            return (int) callMethod(context, KeywordNames.lengthMethodName, List.of()).evalValue(context).readInteger();
+        }
+
+        return fields.size() + methods.size();
+    }
+
+    @Override
+    public Value deepcopy() {//todo change this one big time when I change implementation of classes
+        if (isObject && hasMethod(KeywordNames.deepCopyMethodName)){
+            return callMethod(context, KeywordNames.deepCopyMethodName, List.of()).evalValue(context);
+        }
+
+        Map<Value, Value> members = new HashMap<>();
+        fields.forEach((s, v)->members.put(StringValue.of(s), v.deepcopy()));
+        methods.forEach((s, fv)->members.put(StringValue.of(s), fv.deepcopy()));
+        ClassValue copyClass = new ClassValue(className, members, context.recreate());
+        copyClass.isObject = this.isObject;
+        return copyClass;
+    }
+
+    @Override
+    public int hashCode(){
+        if (isObject && hasMethod(KeywordNames.hashMethodName)){
+            return (int) callMethod(context, KeywordNames.hashMethodName, List.of()).evalValue(context).readInteger();
+        }
+
+        return fields.hashCode() + methods.hashCode()+className.hashCode() + (isObject? 1:0);
+    }
+
+    @Override
+    public Value split(Value delimiter) {
+        if (isObject && hasMethod(KeywordNames.splitMethodName)){
+            return callMethod(context, KeywordNames.splitMethodName, List.of(delimiter)).evalValue(context);
+        }
+
+        return super.split(delimiter);
+    }
+
+    @Override
+    public Value slice(long from, Long to) {
+        if (isObject && hasMethod(KeywordNames.sliceMethodName)){
+            return callMethod(context, KeywordNames.sliceMethodName, List.of(NumericValue.of(from), NumericValue.of(to))).evalValue(context);
+        }
+
+        return super.slice(to, from);
+    }
+
+    @Override
+    public NbtElement toTag(boolean force, DynamicRegistryManager regs) {//todo make note that this is not reversible
+        if (isObject && hasMethod(KeywordNames.makeNBTMethodName)){
+            return ((NBTSerializableValue) callMethod(context, KeywordNames.makeNBTMethodName, List.of()).evalValue(context)).getTag();
+        }
+        throw new NBTSerializableValue.IncompatibleTypeException(this);
+    }
+
+    @Override
+    public JsonElement toJson() {
+        if (isObject && hasMethod(KeywordNames.makeJSONMethodName)){
+            //Make sure to use MapValue's toJson() instead of Value's toJson()
+            return ((MapValue) callMethod(context, KeywordNames.makeJSONMethodName, List.of()).evalValue(context)).toJson();
+        }
+        throw new ThrowStatement(this, Throwables.JSON_ERROR);
+    }
+
+
+    public Value toBase64() {
+        if (isObject && hasMethod(KeywordNames.makeB64MethodName)){
+            return callMethod(context, KeywordNames.makeB64MethodName, List.of()).evalValue(context);
+        }
+        return StringValue.of(Base64.getEncoder().encodeToString(getString().getBytes(StandardCharsets.UTF_8)));
     }
 
     @Override
