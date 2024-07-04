@@ -10,6 +10,8 @@ import carpet.script.value.StringValue;
 import carpet.script.value.Value;
 import scarpetclasses.scarpet.value.ClassValue;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.function.Function;
 
 //Temporary imports for testing purposes
@@ -80,6 +82,19 @@ public class ClassExpression {
                 return fun.apply(c);
             }
             throw new InternalExpressionException(name + " requires a class value as argument, not " + v.getTypeString());
+        });
+    }
+
+    /**
+     * A separate method for the overwrites in case they break stuff
+     */
+    public static void applyOverwrite(CarpetExpression cexpr){
+        Expression expr = cexpr.getExpr();
+
+        expr.addUnaryFunction("encode_b64", v->{
+            if(v instanceof ClassValue c)
+                return c.toBase64();
+            return StringValue.of(Base64.getEncoder().encodeToString(v.getString().getBytes(StandardCharsets.UTF_8)));
         });
     }
 }

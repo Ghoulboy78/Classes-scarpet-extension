@@ -5,6 +5,7 @@ import carpet.script.LazyValue;
 import carpet.script.exception.InternalExpressionException;
 import carpet.script.exception.ThrowStatement;
 import carpet.script.exception.Throwables;
+import carpet.script.value.BooleanValue;
 import carpet.script.value.ContainerValueInterface;
 import carpet.script.value.FunctionValue;
 import carpet.script.value.MapValue;
@@ -14,6 +15,7 @@ import carpet.script.value.StringValue;
 import carpet.script.value.Value;
 import com.google.gson.JsonElement;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtString;
 import net.minecraft.registry.DynamicRegistryManager;
 import scarpetclasses.mixins.FunctionValueAccessorMixin;
 
@@ -227,12 +229,16 @@ public class ClassValue extends Value implements ContainerValueInterface {
         return super.slice(to, from);
     }
 
+    //Todo change this majorly when I switch to newer class system, with storing and retrieving field data, since the rest will already be stored and memorised
     @Override
     public NbtElement toTag(boolean force, DynamicRegistryManager regs) {
         if (isObject && hasMethod(KeywordNames.makeNBTMethodName)) {
-            return ((NBTSerializableValue) callMethod(context, KeywordNames.makeNBTMethodName, List.of()).evalValue(context)).getTag();
+            return ((NBTSerializableValue) callMethod(context, KeywordNames.makeNBTMethodName, List.of(BooleanValue.of(force))).evalValue(context)).getTag();
         }
-        throw new NBTSerializableValue.IncompatibleTypeException(this);
+        if(!force) {
+            throw new NBTSerializableValue.IncompatibleTypeException(this);
+        }
+        return NbtString.of(getString()); //this may not work, but I'll cross that bridge when we get there
     }
 
     @Override
