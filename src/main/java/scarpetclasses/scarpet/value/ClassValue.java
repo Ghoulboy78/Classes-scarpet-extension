@@ -152,6 +152,14 @@ public class ClassValue extends Value implements ContainerValueInterface {
     }
 
     /**
+     * Simple access to {@link ClassValue#callMethod(Context, String, List)}
+     * but evaluated with local {@link ClassValue#context}
+     */
+    private Value callMethod(String name, List<Value> params){
+        return callMethod(context, name, params).evalValue(context);
+    }
+
+    /**
      * This will be accessed via {@code type()} function,
      * whereas {@link ClassValue#className} will be accessed via {@code class_name()} function
      */
@@ -163,7 +171,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
     @Override
     public String getString() {
         if (isObject && hasMethod(KeywordNames.stringMethodName)) {
-            return callMethod(context, KeywordNames.stringMethodName, List.of()).evalValue(context).getString();
+            return callMethod(KeywordNames.stringMethodName, List.of()).getString();
         }
 
         //Making distinction between a class declaration and an object belonging to a class
@@ -182,7 +190,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
     @Override
     public int length() {
         if (isObject && hasMethod(KeywordNames.lengthMethodName)) {
-            return (int) callMethod(context, KeywordNames.lengthMethodName, List.of()).evalValue(context).readInteger();
+            return (int) callMethod(KeywordNames.lengthMethodName, List.of()).readInteger();
         }
 
         return fields.size() + methods.size();
@@ -191,7 +199,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
     @Override
     public Value deepcopy() {//todo change this one big time when I change implementation of classes
         if (isObject && hasMethod(KeywordNames.deepCopyMethodName)) {
-            return callMethod(context, KeywordNames.deepCopyMethodName, List.of()).evalValue(context);
+            return callMethod(KeywordNames.deepCopyMethodName, List.of());
         }
 
         Map<Value, Value> members = new HashMap<>();
@@ -205,7 +213,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
     @Override
     public int hashCode() {
         if (isObject && hasMethod(KeywordNames.hashMethodName)) {
-            return (int) callMethod(context, KeywordNames.hashMethodName, List.of()).evalValue(context).readInteger();
+            return (int) callMethod(KeywordNames.hashMethodName, List.of()).readInteger();
         }
 
         return fields.hashCode() + methods.hashCode() + className.hashCode() + (isObject ? 1 : 0);
@@ -214,7 +222,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
     @Override
     public Value split(Value delimiter) {
         if (isObject && hasMethod(KeywordNames.splitMethodName)) {
-            return callMethod(context, KeywordNames.splitMethodName, List.of(delimiter)).evalValue(context);
+            return callMethod(KeywordNames.splitMethodName, List.of(delimiter));
         }
 
         return super.split(delimiter);
@@ -223,7 +231,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
     @Override
     public Value slice(long from, Long to) {
         if (isObject && hasMethod(KeywordNames.sliceMethodName)) {
-            return callMethod(context, KeywordNames.sliceMethodName, List.of(NumericValue.of(from), NumericValue.of(to))).evalValue(context);
+            return callMethod(KeywordNames.sliceMethodName, List.of(NumericValue.of(from), NumericValue.of(to)));
         }
 
         return super.slice(to, from);
@@ -233,7 +241,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
     @Override
     public NbtElement toTag(boolean force, DynamicRegistryManager regs) {
         if (isObject && hasMethod(KeywordNames.makeNBTMethodName)) {
-            return ((NBTSerializableValue) callMethod(context, KeywordNames.makeNBTMethodName, List.of(BooleanValue.of(force))).evalValue(context)).getTag();
+            return ((NBTSerializableValue) callMethod(KeywordNames.makeNBTMethodName, List.of(BooleanValue.of(force)))).getTag();
         }
         if(!force) {
             throw new NBTSerializableValue.IncompatibleTypeException(this);
@@ -245,14 +253,14 @@ public class ClassValue extends Value implements ContainerValueInterface {
     public JsonElement toJson() {
         if (isObject && hasMethod(KeywordNames.makeJSONMethodName)) {
             //Make sure to use MapValue's toJson() instead of Value's toJson()
-            return ((MapValue) callMethod(context, KeywordNames.makeJSONMethodName, List.of()).evalValue(context)).toJson();
+            return ((MapValue) callMethod(KeywordNames.makeJSONMethodName, List.of())).toJson();
         }
         throw new ThrowStatement(this, Throwables.JSON_ERROR);
     }
 
     public Value toBase64() {
         if (isObject && hasMethod(KeywordNames.makeB64MethodName)) {
-            return callMethod(context, KeywordNames.makeB64MethodName, List.of()).evalValue(context);
+            return callMethod(KeywordNames.makeB64MethodName, List.of());
         }
         return StringValue.of(Base64.getEncoder().encodeToString(getString().getBytes(StandardCharsets.UTF_8)));
     }
@@ -335,7 +343,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
         /**
          * Name of the method which overwrites behaviour with scarpet {@code hash_code()} function
          */
-        public static final String hashMethodName = "hash_code";//todo implement class variant counter like in FunctionValue for dfault behaviour
+        public static final String hashMethodName = "hash_code";//todo implement class variant counter like in FunctionValue for default behaviour
         /**
          * Name of the method which overwrites behaviour with scarpet {@code copy()} function
          */
