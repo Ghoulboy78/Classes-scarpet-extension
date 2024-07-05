@@ -40,7 +40,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
     /**
      * Whether this is the declaration of the class or an object which is a member of that class
      */
-    private boolean isObject; //todo shift this to make classes untouchable by programmer
+    private boolean isObject; //todo get rid of this to make classes untouchable by programmer
     private Map<String, Value> fields = new HashMap<>();
     private Map<String, FunctionValue> methods = new HashMap<>();
 
@@ -298,8 +298,59 @@ public class ClassValue extends Value implements ContainerValueInterface {
     }
 
     @Override
+    public Value in(Value where) {
+        return NULL;//todo containers
+    }
+
+    @Override
+    public int compareTo(Value other) { //todo later
+        if(this.isObject && this.hasMethod(KeywordNames.comparisonOperationmask)){
+            return (int) callMethod(KeywordNames.comparisonOperationmask, List.of(other)).readInteger();
+        }
+
+        throw new InternalExpressionException("Did not define comparison for class value");
+    }
+
+
+    @Override
     public Value add(Value other) {
-        return other;//todo add this stuff later
+        if(this.isObject && this.hasMethod(KeywordNames.addOperationmask)){
+            return callMethod(KeywordNames.addOperationmask, List.of(other));
+        }
+
+        throw new InternalExpressionException("Did not define addition behaviour for class value");
+    }
+    @Override
+    public Value subtract(Value other) {
+        if(this.isObject && this.hasMethod(KeywordNames.minusOperationmask)){
+            return callMethod(KeywordNames.minusOperationmask, List.of(other));
+        }
+
+        throw new InternalExpressionException("Did not define subtraction behaviour for class value");
+    }
+    @Override
+    public Value multiply(Value other) {
+        if(this.isObject && this.hasMethod(KeywordNames.timesOperationmask)){
+            return callMethod(KeywordNames.timesOperationmask, List.of(other));
+        }
+
+        throw new InternalExpressionException("Did not define multiplication behaviour for class value");
+    }
+    @Override
+    public Value divide(Value other) {
+        if(this.isObject && this.hasMethod(KeywordNames.divideOperationmask)){
+            return callMethod(KeywordNames.divideOperationmask, List.of(other));
+        }
+
+        throw new InternalExpressionException("Did not define division behaviour for class value");
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if(this.isObject && other instanceof Value ov && this.hasMethod(KeywordNames.equalsOperationmask)){
+            return callMethod(context, KeywordNames.equalsOperationmask, List.of(ov)).evalValue(context, Context.BOOLEAN).getBoolean();
+        }
+        return other instanceof ClassValue c && c.className.equals(className) && c.fields.equals(fields);
     }
 
     /**
@@ -362,5 +413,29 @@ public class ClassValue extends Value implements ContainerValueInterface {
          * Name of the method which overwrites behaviour with scarpet {@code encode_b64()} function
          */
         public static final String makeB64MethodName = "to_b64";
+        /**
+         * Name of the method which overwrites addition behaviour
+         */
+        public static final String addOperationmask = "add";
+        /**
+         * Name of the method which overwrites subtraction behaviour
+         */
+        public static final String minusOperationmask = "subtract";
+        /**
+         * Name of the method which overwrites multiplication behaviour
+         */
+        public static final String timesOperationmask = "multiply";
+        /**
+         * Name of the method which overwrites division behaviour
+         */
+        public static final String divideOperationmask = "divide";
+        /**
+         * Name of the method which overwrites equality '{@code ==}' operator
+         */
+        public static final String equalsOperationmask = "equals";
+        /**
+         * Name of the method which defines comparison for inequality operators
+         */
+        public static final String comparisonOperationmask = "compare";
     }
 }
