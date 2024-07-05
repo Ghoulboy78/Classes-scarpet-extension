@@ -228,7 +228,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
             return callMethod(KeywordNames.splitMethodName, delimiter);
         }
 
-        return super.split(delimiter);
+        throw new InternalExpressionException("Did not define 'split' for class value");
     }
 
     @Override
@@ -237,7 +237,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
             return callMethod(KeywordNames.sliceMethodName, NumericValue.of(from), NumericValue.of(to));
         }
 
-        return super.slice(to, from);
+        throw new InternalExpressionException("Did not define 'slice' for class value");
     }
 
     //Todo change this majorly when I switch to newer class system, with storing and retrieving field data, since the rest will already be stored and memorised
