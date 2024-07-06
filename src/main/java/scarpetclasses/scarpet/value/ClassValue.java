@@ -48,10 +48,17 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
         this.context = c;
         this.className = className;
-        this.fields = declarer.fields; //todo check if I need to copy this
+        this.fields = declarer.fields;
         this.methods = declarer.methods;
 
         initializeCall(params);
+    }
+
+    private ClassValue(String className, Context c, Map<String, Value> fields, Map<String, FunctionValue> methods){
+        this.context = c;
+        this.className = className;
+        this.fields = fields;
+        this.methods = methods;
     }
 
     public boolean hasMember(String member) {
@@ -166,20 +173,19 @@ public class ClassValue extends Value implements ContainerValueInterface {
         return fields.size() + methods.size();
     }
 
-    /* todo uncomment when I redo this
+
     @Override
+    @NotNull
     public Value deepcopy() {
         if (hasMethod(KeywordNames.deepCopyMethodName)) {
-            return callMethod(KeywordNames.deepCopyMethodName);
+            return callMethod(KeywordNames.deepCopyMethodName);//.deepcopy(); ?
         }
 
-        Map<Value, Value> members = new HashMap<>();
-        fields.forEach((s, v) -> members.put(StringValue.of(s), v.deepcopy()));
-        methods.forEach((s, fv) -> members.put(StringValue.of(s), fv.deepcopy()));
-        ClassValue copyClass = new ClassValue(className, members, context.recreate());
-        return copyClass;
+        Map<String, Value> copiedFields = new HashMap<>();
+        fields.forEach((s, v) -> copiedFields.put(s, v.deepcopy()));
+
+        return new ClassValue(className, context, copiedFields, methods);
     }
-     */
 
     @Override
     public int hashCode() {

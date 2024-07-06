@@ -13,6 +13,7 @@ import java.util.Set;
  */
 public class Classes {
     //todo possibly store these by app/ ScriptHost object
+    //todo possibly add default classes here?
     private static final Map<String, ScarpetClass> declaredClasses = new HashMap<>();
 
     public static void addNewClassDef(String className, Map<Value, Value> members) {
