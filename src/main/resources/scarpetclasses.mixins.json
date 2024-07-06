@@ -3,7 +3,8 @@
   "package": "scarpetclasses.mixins",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "FunctionValueAccessorMixin"
+    "FunctionValueAccessorMixin",
+    "ScriptHostInjectorMixin"
   ],
   "client": [
   ],

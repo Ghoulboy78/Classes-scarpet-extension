@@ -23,8 +23,13 @@ public class ClassExpression {
     public static void apply(CarpetExpression cexpr) {
         Expression expr = cexpr.getExpr();
 
-        expr.addContextFunction("new_class", 2, (c, t, lv) -> {
-            ClassValue newClass;
+        expr.addContextFunction("declare_class", -1, (c, t, lv) -> { //maybe change name of this func
+            if(lv.isEmpty()){ //without arguments, returns all declared classes
+                return ListValue.wrap(Classes.getDeclaredClassNames().stream().map(StringValue::of));
+            }
+
+            if(lv.size()==1)
+                throw new InternalExpressionException("Must declare a class with at least a name and map of fields and methods");
 
             if (superSecretSetting) {
                 m(cexpr.getSource(), "gi new class name: " + lv.get(0).getString());
@@ -32,32 +37,27 @@ public class ClassExpression {
             }
 
             if (lv.get(1) instanceof MapValue map)
-                newClass = new ClassValue(lv.get(0).getString(), map.getMap(), c);
+                Classes.addNewClassDef(lv.get(0).getString(), map.getMap());
             else
-                throw new InternalExpressionException("Must declare a class with a map of fields and methods.");
+                throw new InternalExpressionException("Must declare a class with a map of fields and methods");
 
-            return newClass;
+            return lv.get(0);//returning name of the new class
         });
 
         addUnaryClassFunction(expr, "class_name", c -> StringValue.of(c.className));
         addUnaryClassFunction(expr, "class_fields", c -> ListValue.wrap(c.getFields().keySet().stream().map(StringValue::of)));
         addUnaryClassFunction(expr, "class_methods", c -> ListValue.wrap(c.getMethods().keySet().stream().map(StringValue::of)));
 
-        expr.addContextFunction("new_object", -1, (c, t, lv) -> {
-            if (lv.size() < 1)
-                throw new InternalExpressionException("'new_object' requires at least a class definition");
+        expr.addContextFunction("new", -1, (c, t, lv) -> { //possibly change back to 'new_object' for clarity?
+            if (lv.isEmpty())
+                throw new InternalExpressionException("'new' requires at least a class name");
 
-            Value v = lv.get(0);
-            if (!(v instanceof ClassValue cv))
-                throw new InternalExpressionException("First argument to 'new_object' must be of type class, not '" + v.getTypeString() + "'");
+            Value name = lv.get(0);
 
-            if (cv.isObject())
-                throw new InternalExpressionException("Cannot instantiate an object with another object, '" + cv.boundVariable + "' is already an instance of '" + cv.className + "'");
+            ClassValue newObject = new ClassValue(name.getString(), c, lv.subList(1, lv.size()));
 
-            ClassValue newObject = new ClassValue(cv, c, lv.subList(1, lv.size()));
-
-            if(superSecretSetting)
-                m(cexpr.getSource(), "gi New object: "+newObject.getString());
+            if (superSecretSetting)
+                m(cexpr.getSource(), "gi New object: " + newObject.getString());
 
             return newObject;
         });
@@ -74,7 +74,7 @@ public class ClassExpression {
     }
 
     /**
-     * Simple way of adding classvalue based functions, since there are plenty of these
+     * Simple way of adding {@link ClassValue} based functions, since there are a few of these
      */
     public static void addUnaryClassFunction(Expression expr, String name, Function<ClassValue, Value> fun) {
         expr.addUnaryFunction(name, v -> {
@@ -88,11 +88,11 @@ public class ClassExpression {
     /**
      * A separate method for the overwrites in case they break stuff
      */
-    public static void applyOverwrite(CarpetExpression cexpr){
+    public static void applyOverwrite(CarpetExpression cexpr) {
         Expression expr = cexpr.getExpr();
 
-        expr.addUnaryFunction("encode_b64", v->{
-            if(v instanceof ClassValue c)
+        expr.addUnaryFunction("encode_b64", v -> {
+            if (v instanceof ClassValue c)
                 return c.toBase64();
             return StringValue.of(Base64.getEncoder().encodeToString(v.getString().getBytes(StandardCharsets.UTF_8)));
         });

@@ -18,6 +18,7 @@ import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.registry.DynamicRegistryManager;
 import scarpetclasses.mixins.FunctionValueAccessorMixin;
+import scarpetclasses.scarpet.Classes;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -30,8 +31,6 @@ import java.util.Map;
  */
 public class ClassValue extends Value implements ContainerValueInterface {
 
-    //Todo think of a better place to store these strings
-
     /**
      * The name of this user-defined class, or the name of the user-defined class that this object belongs to.
      */
@@ -40,41 +39,17 @@ public class ClassValue extends Value implements ContainerValueInterface {
      * Context from when this was declared
      */
     private final Context context;
-    /**
-     * Whether this is the declaration of the class or an object which is a member of that class
-     */
-    private boolean isObject; //todo get rid of this to make classes untouchable by programmer
     private Map<String, Value> fields = new HashMap<>();
     private Map<String, FunctionValue> methods = new HashMap<>();
 
     /**
-     * Defining a class
-     *
-     * @param name    Name of the user-defined class
-     * @param members Map of the members (so fields and methods) of the user-defined class
-     */
-    public ClassValue(String name, Map<Value, Value> members, Context context) {
-        this.className = name;
-        this.context = context;
-        this.isObject = false;
-        for (Map.Entry<Value, Value> entry : members.entrySet()) {
-            if (entry.getValue() instanceof FunctionValue f) {
-                methods.put(entry.getKey().getString(), f);
-            } else {
-                fields.put(entry.getKey().getString(), entry.getValue());
-            }
-        }
-    }
-
-    /**
      * Instantiating an object
-     *
-     * @param declarer The class that this is an object of
      */
-    public ClassValue(ClassValue declarer, Context c, List<Value> params) {
-        isObject = true;
+    public ClassValue(String className, Context c, List<Value> params) {
+        Classes.ScarpetClass declarer = Classes.getClass(className);
+
         this.context = c;
-        className = declarer.className;
+        this.className = className;
         this.fields = declarer.fields; //todo check if I need to copy this
         this.methods = declarer.methods;
 
@@ -91,10 +66,6 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     public boolean hasField(String field) {
         return fields.containsKey(field);
-    }
-
-    public boolean isObject() {
-        return isObject;
     }
 
     public Map<String, Value> getFields() {
@@ -131,10 +102,6 @@ public class ClassValue extends Value implements ContainerValueInterface {
      * Method used to call a method in the class
      */
     public LazyValue callMethod(Context c, String name, List<Value> params) {
-
-        if (!isObject)
-            throw new InternalExpressionException("Must instantiate a class with 'new_object()' before calling a method");
-
         if (!methods.containsKey(name))
             throw new InternalExpressionException("Unknown method '" + name + "' in class '" + className + "'");
 
@@ -173,35 +140,37 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     @Override
     public String getString() {
-        if (isObject && hasMethod(KeywordNames.stringMethodName)) {
+        if (hasMethod(KeywordNames.stringMethodName)) {
             return callMethod(KeywordNames.stringMethodName).getString();
         }
 
         //Making distinction between a class declaration and an object belonging to a class
-        return (isObject ? "Object@" : "Class@") + className;// + this.hashCode();
+        return "Class@"+className;// + this.hashCode();
     }
 
     @Override
     public boolean getBoolean() {
-        if (isObject && hasMethod(KeywordNames.booleanMethodName)) {
+        if (hasMethod(KeywordNames.booleanMethodName)) {
             return callMethod(context, KeywordNames.booleanMethodName, List.of()).evalValue(context, Context.BOOLEAN).getBoolean();
         }
 
-        return isObject;
+        //todo possibly replace with null check
+        throw new InternalExpressionException("Did not define '"+KeywordNames.booleanMethodName+"' for class value");
     }
 
     @Override
     public int length() {
-        if (isObject && hasMethod(KeywordNames.lengthMethodName)) {
+        if (hasMethod(KeywordNames.lengthMethodName)) {
             return (int) callMethod(KeywordNames.lengthMethodName).readInteger();
         }
 
         return fields.size() + methods.size();
     }
 
+    /* todo uncomment when I redo this
     @Override
-    public Value deepcopy() {//todo change this one big time when I change implementation of classes
-        if (isObject && hasMethod(KeywordNames.deepCopyMethodName)) {
+    public Value deepcopy() {
+        if (hasMethod(KeywordNames.deepCopyMethodName)) {
             return callMethod(KeywordNames.deepCopyMethodName);
         }
 
@@ -209,22 +178,22 @@ public class ClassValue extends Value implements ContainerValueInterface {
         fields.forEach((s, v) -> members.put(StringValue.of(s), v.deepcopy()));
         methods.forEach((s, fv) -> members.put(StringValue.of(s), fv.deepcopy()));
         ClassValue copyClass = new ClassValue(className, members, context.recreate());
-        copyClass.isObject = this.isObject;
         return copyClass;
     }
+     */
 
     @Override
     public int hashCode() {
-        if (isObject && hasMethod(KeywordNames.hashMethodName)) {
+        if (hasMethod(KeywordNames.hashMethodName)) {
             return (int) callMethod(KeywordNames.hashMethodName).readInteger();
         }
 
-        return fields.hashCode() + methods.hashCode() + className.hashCode() + (isObject ? 1 : 0);
+        return fields.hashCode() + methods.hashCode() + className.hashCode();
     }
 
     @Override
     public Value split(Value delimiter) {
-        if (isObject && hasMethod(KeywordNames.splitMethodName)) {
+        if (hasMethod(KeywordNames.splitMethodName)) {
             return callMethod(KeywordNames.splitMethodName, delimiter);
         }
 
@@ -233,7 +202,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     @Override
     public Value slice(long from, Long to) {
-        if (isObject && hasMethod(KeywordNames.sliceMethodName)) {
+        if (hasMethod(KeywordNames.sliceMethodName)) {
             return callMethod(KeywordNames.sliceMethodName, NumericValue.of(from), NumericValue.of(to));
         }
 
@@ -243,7 +212,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
     //Todo change this majorly when I switch to newer class system, with storing and retrieving field data, since the rest will already be stored and memorised
     @Override
     public NbtElement toTag(boolean force, DynamicRegistryManager regs) {
-        if (isObject && hasMethod(KeywordNames.makeNBTMethodName)) {
+        if (hasMethod(KeywordNames.makeNBTMethodName)) {
             return ((NBTSerializableValue) callMethod(KeywordNames.makeNBTMethodName, BooleanValue.of(force))).getTag();
         }
         if (!force) {
@@ -254,7 +223,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     @Override
     public JsonElement toJson() {
-        if (isObject && hasMethod(KeywordNames.makeJSONMethodName)) {
+        if (hasMethod(KeywordNames.makeJSONMethodName)) {
             //Make sure to use MapValue's toJson() instead of Value's toJson()
             return ((MapValue) callMethod(KeywordNames.makeJSONMethodName)).toJson();
         }
@@ -262,7 +231,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
     }
 
     public Value toBase64() {
-        if (isObject && hasMethod(KeywordNames.makeB64MethodName)) {
+        if (hasMethod(KeywordNames.makeB64MethodName)) {
             return callMethod(KeywordNames.makeB64MethodName);
         }
         return StringValue.of(Base64.getEncoder().encodeToString(getString().getBytes(StandardCharsets.UTF_8)));
@@ -270,9 +239,6 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     @Override
     public boolean put(Value where, Value value) {//todo containers
-        if (!isObject)
-            throw new InternalExpressionException("Must instantiate a class before modifying its fields");
-
         if (hasMethod(where.getString()))
             throw new InternalExpressionException("Cannot set value of method");
 
@@ -285,8 +251,6 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     @Override
     public Value get(Value where) {//todo containers
-        if (!isObject)
-            throw new InternalExpressionException("Must instantiate a class before accessing its fields");
         return fields.getOrDefault(where.getString(), NULL);
     }
 
@@ -306,8 +270,8 @@ public class ClassValue extends Value implements ContainerValueInterface {
     }
 
     @Override
-    public int compareTo(Value other) { //todo later
-        if (this.isObject && this.hasMethod(KeywordNames.comparisonOperationmask)) {
+    public int compareTo(Value other) {
+        if (this.hasMethod(KeywordNames.comparisonOperationmask)) {
             return (int) callMethod(KeywordNames.comparisonOperationmask, other).readInteger();
         }
 
@@ -317,7 +281,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     @Override
     public Value add(Value other) {
-        if (this.isObject && this.hasMethod(KeywordNames.addOperationmask)) {
+        if (this.hasMethod(KeywordNames.addOperationmask)) {
             return callMethod(KeywordNames.addOperationmask, other);
         }
 
@@ -326,7 +290,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     @Override
     public Value subtract(Value other) {
-        if (this.isObject && this.hasMethod(KeywordNames.minusOperationmask)) {
+        if (this.hasMethod(KeywordNames.minusOperationmask)) {
             return callMethod(KeywordNames.minusOperationmask, other);
         }
 
@@ -335,7 +299,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     @Override
     public Value multiply(Value other) {
-        if (this.isObject && this.hasMethod(KeywordNames.timesOperationmask)) {
+        if (this.hasMethod(KeywordNames.timesOperationmask)) {
             return callMethod(KeywordNames.timesOperationmask, other);
         }
 
@@ -344,7 +308,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     @Override
     public Value divide(Value other) {
-        if (this.isObject && this.hasMethod(KeywordNames.divideOperationmask)) {
+        if (this.hasMethod(KeywordNames.divideOperationmask)) {
             return callMethod(KeywordNames.divideOperationmask, other);
         }
 
@@ -353,7 +317,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     @Override
     public boolean equals(Object other) {
-        if (this.isObject && other instanceof Value ov && this.hasMethod(KeywordNames.equalsOperationmask)) {
+        if (other instanceof Value ov && this.hasMethod(KeywordNames.equalsOperationmask)) {
             return callMethod(context, KeywordNames.equalsOperationmask, List.of(ov)).evalValue(context, Context.BOOLEAN).getBoolean();
         }
         return other instanceof ClassValue c && c.className.equals(className) && c.fields.equals(fields);
@@ -400,7 +364,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
         /**
          * Name of the method which overwrites behaviour with scarpet {@code hash_code()} function
          */
-        public static final String hashMethodName = "hash_code";//todo implement class variant counter like in FunctionValue for default behaviour
+        public static final String hashMethodName = "hash_code";
         /**
          * Name of the method which overwrites behaviour with scarpet {@code copy()} function
          */
