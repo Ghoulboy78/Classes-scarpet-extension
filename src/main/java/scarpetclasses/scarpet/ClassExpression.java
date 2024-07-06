@@ -6,14 +6,20 @@ import carpet.script.exception.InternalExpressionException;
 import carpet.script.value.FunctionValue;
 import carpet.script.value.ListValue;
 import carpet.script.value.MapValue;
+import carpet.script.value.NBTSerializableValue;
 import carpet.script.value.StringValue;
 import carpet.script.value.Value;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
 import scarpetclasses.scarpet.value.ClassValue;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
+import static scarpetclasses.scarpet.value.ClassValue.KeywordNames.typeString;
 //Temporary imports for testing purposes
 import static carpet.CarpetSettings.superSecretSetting;
 import static carpet.utils.Messenger.m;
@@ -95,6 +101,29 @@ public class ClassExpression {
             if (v instanceof ClassValue c)
                 return c.toBase64();
             return StringValue.of(Base64.getEncoder().encodeToString(v.getString().getBytes(StandardCharsets.UTF_8)));
+        });
+
+        expr.addContextFunction("parse_nbt", 1, (c, t, lv) -> {
+            Value v = lv.getFirst();
+            if (v instanceof final NBTSerializableValue nbtsv) {
+                NbtElement tag = nbtsv.getTag();
+
+                //todo add some config check to enable or disable this, with note about instability of this whole thing
+                if (tag instanceof NbtCompound ctag && Classes.hasClass(ctag.getString(typeString))) {
+                    Map<String, Value> fields = new HashMap<>();
+                    String className = ctag.getString(typeString);
+                    ctag.remove(typeString);
+                    for (String field : ctag.getKeys()) {
+                        fields.put(field, ((NBTSerializableValue) NBTSerializableValue.of(ctag.get(field))).toValue());
+                    }
+
+                    return new ClassValue(className, c, fields);
+                }
+
+                return nbtsv.toValue();
+            }
+            NBTSerializableValue ret = NBTSerializableValue.parseString(v.getString());
+            return ret == null ? Value.NULL : ret.toValue();
         });
     }
 }

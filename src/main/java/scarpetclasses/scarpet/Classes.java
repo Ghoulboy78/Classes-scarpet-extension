@@ -30,6 +30,10 @@ public class Classes {
         return declaredClasses.get(name);
     }
 
+    public static boolean hasClass(String name) {
+        return declaredClasses.containsKey(name);
+    }
+
     /**
      * For getting rid of declared classes between loads
      * todo test if how it works with multiple apps etc.

@@ -14,9 +14,10 @@ import carpet.script.value.NumericValue;
 import carpet.script.value.StringValue;
 import carpet.script.value.Value;
 import com.google.gson.JsonElement;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtString;
 import net.minecraft.registry.DynamicRegistryManager;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import scarpetclasses.mixins.FunctionValueAccessorMixin;
 import scarpetclasses.scarpet.Classes;
@@ -26,6 +27,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class ClassValue extends Value implements ContainerValueInterface {
 
@@ -54,11 +56,17 @@ public class ClassValue extends Value implements ContainerValueInterface {
         initializeCall(params);
     }
 
-    private ClassValue(String className, Context c, Map<String, Value> fields, Map<String, FunctionValue> methods){
+    /**
+     * Creating an object, though it may have unexpected values for fields.
+     */
+    public ClassValue(String className, Context c, Map<String, Value> fields) {
         this.context = c;
         this.className = className;
+        Set<String> fieldKeys = Classes.getClass(className).fields.keySet();
+        if (!fieldKeys.equals(fields.keySet()))//todo test with wrong fields
+            throw new InternalExpressionException("Mismatched fields, class '" + className + "' requires fields like [" + StringUtils.join(fieldKeys, ", ") + "]");
         this.fields = fields;
-        this.methods = methods;
+        this.methods = Classes.getClass(className).methods;
     }
 
     public boolean hasMember(String member) {
@@ -141,7 +149,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
     @Override
     @NotNull
     public String getTypeString() {
-        return "class";
+        return KeywordNames.typeString;
     }
 
     @Override
@@ -184,7 +192,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
         Map<String, Value> copiedFields = new HashMap<>();
         fields.forEach((s, v) -> copiedFields.put(s, v.deepcopy()));
 
-        return new ClassValue(className, context, copiedFields, methods);
+        return new ClassValue(className, context, copiedFields);
     }
 
     @Override
@@ -216,17 +224,21 @@ public class ClassValue extends Value implements ContainerValueInterface {
         throw new InternalExpressionException("Did not define 'slice' for class value");
     }
 
-    //Todo change this majorly when I switch to newer class system, with storing and retrieving field data, since the rest will already be stored and memorised
+
     @Override
     @NotNull
     public NbtElement toTag(boolean force, DynamicRegistryManager regs) {
         if (hasMethod(KeywordNames.makeNBTMethodName)) {
             return ((NBTSerializableValue) callMethod(KeywordNames.makeNBTMethodName, BooleanValue.of(force))).getTag();
         }
-        if (!force) {
+        if (!force) { //Cos this shouldn't normally be done cos it conflicts with nbt maps
             throw new NBTSerializableValue.IncompatibleTypeException(this);
         }
-        return NbtString.of(getString()); //this may not work, but I'll cross that bridge when we get there
+        NbtCompound tag = new NbtCompound();
+        fields.forEach((s, v) -> tag.put(s, v.toTag(true, regs)));
+        tag.putString(KeywordNames.typeString, className);
+
+        return tag;
     }
 
     @Override
@@ -344,6 +356,10 @@ public class ClassValue extends Value implements ContainerValueInterface {
      * ({@link KeywordNames#selfReference}).
      */
     public static class KeywordNames {
+        /**
+         * Return value of {@link ClassValue#getTypeString()}, as well as used in nbt and json conversions
+         */
+        public static final String typeString = "class";
         /**
          * The name of the variable which refers to the class itself in methods
          */
