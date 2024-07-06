@@ -24,11 +24,11 @@ public class ClassExpression {
         Expression expr = cexpr.getExpr();
 
         expr.addContextFunction("declare_class", -1, (c, t, lv) -> { //maybe change name of this func
-            if(lv.isEmpty()){ //without arguments, returns all declared classes
+            if (lv.isEmpty()) { //without arguments, returns all declared classes
                 return ListValue.wrap(Classes.getDeclaredClassNames().stream().map(StringValue::of));
             }
 
-            if(lv.size()==1)
+            if (lv.size() == 1)
                 throw new InternalExpressionException("Must declare a class with at least a name and map of fields and methods");
 
             if (superSecretSetting) {

@@ -144,8 +144,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
             return callMethod(KeywordNames.stringMethodName).getString();
         }
 
-        //Making distinction between a class declaration and an object belonging to a class
-        return "Class@"+className;// + this.hashCode();
+        return "Object@" + className + "@" + this.hashCode();
     }
 
     @Override
@@ -155,7 +154,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
         }
 
         //todo possibly replace with null check
-        throw new InternalExpressionException("Did not define '"+KeywordNames.booleanMethodName+"' for class value");
+        throw new InternalExpressionException("Did not define '" + KeywordNames.booleanMethodName + "' for class value");
     }
 
     @Override

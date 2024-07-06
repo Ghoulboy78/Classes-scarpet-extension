@@ -15,16 +15,16 @@ public class Classes {
     //todo possibly store these by app/ ScriptHost object
     private static final Map<String, ScarpetClass> declaredClasses = new HashMap<>();
 
-    public static void addNewClassDef(String className, Map<Value, Value> members){
-        if(declaredClasses.containsKey(className)) //todo possible add overwrite option?
-            throw new InternalExpressionException("Already defined class '"+className+"'");
+    public static void addNewClassDef(String className, Map<Value, Value> members) {
+        if (declaredClasses.containsKey(className)) //todo possible add overwrite option?
+            throw new InternalExpressionException("Already defined class '" + className + "'");
 
         declaredClasses.put(className, new ScarpetClass(className, members));
     }
 
-    public static ScarpetClass getClass(String name){
-        if(!declaredClasses.containsKey(name))
-            throw new InternalExpressionException("Unknown class '"+name+"'");
+    public static ScarpetClass getClass(String name) {
+        if (!declaredClasses.containsKey(name))
+            throw new InternalExpressionException("Unknown class '" + name + "'");
 
         return declaredClasses.get(name);
     }
@@ -34,18 +34,18 @@ public class Classes {
      * todo test if how it works with multiple apps etc.
      * todo test wth commandline declared classes
      */
-    public static void clearDeclaredClasses(){
+    public static void clearDeclaredClasses() {
         declaredClasses.clear();
     }
 
-    public static Set<String> getDeclaredClassNames(){
+    public static Set<String> getDeclaredClassNames() {
         return declaredClasses.keySet();
     }
 
     /**
      * Calling it this in order to avoid conflict with {@link Class}
      */
-    public static class ScarpetClass{
+    public static class ScarpetClass {
         public final Map<String, Value> fields = new HashMap<>();
         public final Map<String, FunctionValue> methods = new HashMap<>();
         public final String className;
