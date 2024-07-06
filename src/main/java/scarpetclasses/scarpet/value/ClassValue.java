@@ -17,6 +17,7 @@ import com.google.gson.JsonElement;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.registry.DynamicRegistryManager;
+import org.jetbrains.annotations.NotNull;
 import scarpetclasses.mixins.FunctionValueAccessorMixin;
 import scarpetclasses.scarpet.Classes;
 
@@ -26,9 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * @noinspection ReferenceToMixin
- */
 public class ClassValue extends Value implements ContainerValueInterface {
 
     /**
@@ -134,11 +132,13 @@ public class ClassValue extends Value implements ContainerValueInterface {
      * whereas {@link ClassValue#className} will be accessed via {@code class_name()} function
      */
     @Override
+    @NotNull
     public String getTypeString() {
         return "class";
     }
 
     @Override
+    @NotNull
     public String getString() {
         if (hasMethod(KeywordNames.stringMethodName)) {
             return callMethod(KeywordNames.stringMethodName).getString();
@@ -191,6 +191,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
     }
 
     @Override
+    @NotNull
     public Value split(Value delimiter) {
         if (hasMethod(KeywordNames.splitMethodName)) {
             return callMethod(KeywordNames.splitMethodName, delimiter);
@@ -200,6 +201,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
     }
 
     @Override
+    @NotNull
     public Value slice(long from, Long to) {
         if (hasMethod(KeywordNames.sliceMethodName)) {
             return callMethod(KeywordNames.sliceMethodName, NumericValue.of(from), NumericValue.of(to));
@@ -210,6 +212,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     //Todo change this majorly when I switch to newer class system, with storing and retrieving field data, since the rest will already be stored and memorised
     @Override
+    @NotNull
     public NbtElement toTag(boolean force, DynamicRegistryManager regs) {
         if (hasMethod(KeywordNames.makeNBTMethodName)) {
             return ((NBTSerializableValue) callMethod(KeywordNames.makeNBTMethodName, BooleanValue.of(force))).getTag();
@@ -221,6 +224,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
     }
 
     @Override
+    @NotNull
     public JsonElement toJson() {
         if (hasMethod(KeywordNames.makeJSONMethodName)) {
             //Make sure to use MapValue's toJson() instead of Value's toJson()
@@ -249,6 +253,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
     }
 
     @Override
+    @NotNull
     public Value get(Value where) {//todo containers
         return fields.getOrDefault(where.getString(), NULL);
     }
@@ -264,14 +269,15 @@ public class ClassValue extends Value implements ContainerValueInterface {
     }
 
     @Override
+    @NotNull
     public Value in(Value where) {
         return NULL;//todo containers
     }
 
     @Override
     public int compareTo(Value other) {
-        if (this.hasMethod(KeywordNames.comparisonOperationmask)) {
-            return (int) callMethod(KeywordNames.comparisonOperationmask, other).readInteger();
+        if (this.hasMethod(KeywordNames.comparisonOperationMask)) {
+            return (int) callMethod(KeywordNames.comparisonOperationMask, other).readInteger();
         }
 
         throw new InternalExpressionException("Did not define comparison for class value");
@@ -279,36 +285,40 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
 
     @Override
+    @NotNull
     public Value add(Value other) {
-        if (this.hasMethod(KeywordNames.addOperationmask)) {
-            return callMethod(KeywordNames.addOperationmask, other);
+        if (this.hasMethod(KeywordNames.addOperationMask)) {
+            return callMethod(KeywordNames.addOperationMask, other);
         }
 
         throw new InternalExpressionException("Did not define addition behaviour for class value");
     }
 
     @Override
+    @NotNull
     public Value subtract(Value other) {
-        if (this.hasMethod(KeywordNames.minusOperationmask)) {
-            return callMethod(KeywordNames.minusOperationmask, other);
+        if (this.hasMethod(KeywordNames.minusOperationMask)) {
+            return callMethod(KeywordNames.minusOperationMask, other);
         }
 
         throw new InternalExpressionException("Did not define subtraction behaviour for class value");
     }
 
     @Override
+    @NotNull
     public Value multiply(Value other) {
-        if (this.hasMethod(KeywordNames.timesOperationmask)) {
-            return callMethod(KeywordNames.timesOperationmask, other);
+        if (this.hasMethod(KeywordNames.timesOperationMask)) {
+            return callMethod(KeywordNames.timesOperationMask, other);
         }
 
         throw new InternalExpressionException("Did not define multiplication behaviour for class value");
     }
 
     @Override
+    @NotNull
     public Value divide(Value other) {
-        if (this.hasMethod(KeywordNames.divideOperationmask)) {
-            return callMethod(KeywordNames.divideOperationmask, other);
+        if (this.hasMethod(KeywordNames.divideOperationMask)) {
+            return callMethod(KeywordNames.divideOperationMask, other);
         }
 
         throw new InternalExpressionException("Did not define division behaviour for class value");
@@ -316,8 +326,8 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     @Override
     public boolean equals(Object other) {
-        if (other instanceof Value ov && this.hasMethod(KeywordNames.equalsOperationmask)) {
-            return callMethod(context, KeywordNames.equalsOperationmask, List.of(ov)).evalValue(context, Context.BOOLEAN).getBoolean();
+        if (other instanceof Value ov && this.hasMethod(KeywordNames.equalsOperationMask)) {
+            return callMethod(context, KeywordNames.equalsOperationMask, List.of(ov)).evalValue(context, Context.BOOLEAN).getBoolean();
         }
         return other instanceof ClassValue c && c.className.equals(className) && c.fields.equals(fields);
     }
@@ -385,26 +395,26 @@ public class ClassValue extends Value implements ContainerValueInterface {
         /**
          * Name of the method which overwrites addition behaviour
          */
-        public static final String addOperationmask = "add";
+        public static final String addOperationMask = "add";
         /**
          * Name of the method which overwrites subtraction behaviour
          */
-        public static final String minusOperationmask = "subtract";
+        public static final String minusOperationMask = "subtract";
         /**
          * Name of the method which overwrites multiplication behaviour
          */
-        public static final String timesOperationmask = "multiply";
+        public static final String timesOperationMask = "multiply";
         /**
          * Name of the method which overwrites division behaviour
          */
-        public static final String divideOperationmask = "divide";
+        public static final String divideOperationMask = "divide";
         /**
          * Name of the method which overwrites equality '{@code ==}' operator
          */
-        public static final String equalsOperationmask = "equals";
+        public static final String equalsOperationMask = "equals";
         /**
          * Name of the method which defines comparison for inequality operators
          */
-        public static final String comparisonOperationmask = "compare";
+        public static final String comparisonOperationMask = "compare";
     }
 }
