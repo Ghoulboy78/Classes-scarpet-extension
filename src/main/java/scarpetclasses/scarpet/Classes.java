@@ -1,9 +1,11 @@
 package scarpetclasses.scarpet;
 
+import carpet.script.ScriptHost;
 import carpet.script.exception.InternalExpressionException;
 import carpet.script.value.FunctionValue;
 import carpet.script.value.Value;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -12,39 +14,46 @@ import java.util.Set;
  * A place to store declared classes, and a place to retrieve them afterwards
  */
 public class Classes {
-    //todo possibly store these by app/ ScriptHost object
-    //todo possibly add default classes here?
-    private static final Map<String, ScarpetClass> declaredClasses = new HashMap<>();
+    //todo add option to make these visible universally (instead of by app / ScriptHost object)
+    //todo add default classes here
+    private static final Map<ScriptHost, Map<String, ScarpetClass>> declaredClasses = new HashMap<>();
 
-    public static void addNewClassDef(String className, Map<Value, Value> members) {
-        if (declaredClasses.containsKey(className)) //todo possible add overwrite option?
+    public static void addNewClassDef(ScriptHost host, String className, Map<Value, Value> members) {
+        if (!declaredClasses.containsKey(host))
+            declaredClasses.put(host, new HashMap<>());
+
+
+        if (declaredClasses.get(host).containsKey(className)) //todo possible add overwrite option?
             throw new InternalExpressionException("Already defined class '" + className + "'");
 
-        declaredClasses.put(className, new ScarpetClass(className, members));
+        declaredClasses.get(host).put(className, new ScarpetClass(className, members));
     }
 
-    public static ScarpetClass getClass(String name) {
-        if (!declaredClasses.containsKey(name))
+    public static ScarpetClass getClass(ScriptHost host, String name) {
+        if (!declaredClasses.containsKey(host) || !declaredClasses.get(host).containsKey(name))
             throw new InternalExpressionException("Unknown class '" + name + "'");
 
-        return declaredClasses.get(name);
+        return declaredClasses.get(host).get(name);
     }
 
-    public static boolean hasClass(String name) {
-        return declaredClasses.containsKey(name);
+    public static boolean hasClass(ScriptHost host, String name) {
+        return declaredClasses.containsKey(host) && declaredClasses.get(host).containsKey(name);
     }
 
     /**
-     * For getting rid of declared classes between loads
-     * todo test if how it works with multiple apps etc.
-     * todo test wth commandline declared classes
+     * For getting rid of declared classes between loads and reloads
      */
-    public static void clearDeclaredClasses() {
-        declaredClasses.clear();
+    public static void clearDeclaredClasses(ScriptHost host) {
+        if (!declaredClasses.containsKey(host)) //todo test with an app which doesn't declare any classes
+            throw new InternalExpressionException("How did we get here? Tried to clear declared classes without having any entry for this app");
+
+        declaredClasses.get(host).clear();
     }
 
-    public static Set<String> getDeclaredClassNames() {
-        return declaredClasses.keySet();
+    public static Set<String> getDeclaredClassNames(ScriptHost host) {
+        if (!declaredClasses.containsKey(host))
+            return Collections.emptySet();
+        return declaredClasses.get(host).keySet();
     }
 
     /**

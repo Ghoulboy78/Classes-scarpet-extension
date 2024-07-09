@@ -20,9 +20,6 @@ import java.util.Map;
 import java.util.function.Function;
 
 import static scarpetclasses.scarpet.value.ClassValue.KeywordNames.typeString;
-//Temporary imports for testing purposes
-import static carpet.CarpetSettings.superSecretSetting;
-import static carpet.utils.Messenger.m;
 
 public class ClassExpression {
 
@@ -31,21 +28,14 @@ public class ClassExpression {
 
         expr.addContextFunction("declare_class", -1, (c, t, lv) -> { //maybe change name of this func
             if (lv.isEmpty()) { //without arguments, returns all declared classes
-                return ListValue.wrap(Classes.getDeclaredClassNames().stream().map(StringValue::of));
+                return ListValue.wrap(Classes.getDeclaredClassNames(c.host).stream().map(StringValue::of));
             }
 
             if (lv.size() == 1)
                 throw new InternalExpressionException("Must declare a class with at least a name and map of fields and methods");
 
-            if (superSecretSetting) {
-                m(cexpr.getSource(), "gi new class name: " + lv.get(0).getString());
-                m(cexpr.getSource(), "gi new class params: " + lv.get(1).getString());
-            }
-
-            if (lv.get(1) instanceof MapValue map)
-                Classes.addNewClassDef(lv.get(0).getString(), map.getMap());
-            else
-                throw new InternalExpressionException("Must declare a class with a map of fields and methods");
+            if (lv.get(1) instanceof MapValue map) Classes.addNewClassDef(c.host, lv.get(0).getString(), map.getMap());
+            else throw new InternalExpressionException("Must declare a class with a map of fields and methods");
 
             return lv.get(0);//returning name of the new class
         });
@@ -54,18 +44,15 @@ public class ClassExpression {
         addUnaryClassFunction(expr, "class_fields", c -> ListValue.wrap(c.getFields().keySet().stream().map(StringValue::of)));
         addUnaryClassFunction(expr, "class_methods", c -> ListValue.wrap(c.getMethods().keySet().stream().map(StringValue::of)));
 
+        expr.addContextFunction("clear_classes", 0, (c, t, lv) -> {
+            Classes.clearDeclaredClasses(c.host);
+            return Value.TRUE;
+        });
+
         expr.addContextFunction("new", -1, (c, t, lv) -> { //possibly change back to 'new_object' for clarity?
-            if (lv.isEmpty())
-                throw new InternalExpressionException("'new' requires at least a class name");
+            if (lv.isEmpty()) throw new InternalExpressionException("'new' requires at least a class name");
 
-            Value name = lv.get(0);
-
-            ClassValue newObject = new ClassValue(name.getString(), c, lv.subList(1, lv.size()));
-
-            if (superSecretSetting)
-                m(cexpr.getSource(), "gi New object: " + newObject.getString());
-
-            return newObject;
+            return new ClassValue(lv.get(0).getString(), c, lv.subList(1, lv.size()));
         });
 
         expr.addLazyFunction("call_function", -1, (c, t, lv) -> {
@@ -98,8 +85,7 @@ public class ClassExpression {
         Expression expr = cexpr.getExpr();
 
         expr.addUnaryFunction("encode_b64", v -> {
-            if (v instanceof ClassValue c)
-                return c.toBase64();
+            if (v instanceof ClassValue c) return c.toBase64();
             return StringValue.of(Base64.getEncoder().encodeToString(v.getString().getBytes(StandardCharsets.UTF_8)));
         });
 
@@ -109,7 +95,7 @@ public class ClassExpression {
                 NbtElement tag = nbtsv.getTag();
 
                 //todo add some config check to enable or disable this, with note about instability of this whole thing
-                if (tag instanceof NbtCompound ctag && Classes.hasClass(ctag.getString(typeString))) {
+                if (tag instanceof NbtCompound ctag && Classes.hasClass(c.host, ctag.getString(typeString))) {
                     Map<String, Value> fields = new HashMap<>();
                     String className = ctag.getString(typeString);
                     ctag.remove(typeString);

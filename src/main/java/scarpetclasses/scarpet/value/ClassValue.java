@@ -39,14 +39,14 @@ public class ClassValue extends Value implements ContainerValueInterface {
      * Context from when this was declared
      */
     private final Context context;
-    private Map<String, Value> fields = new HashMap<>();
-    private Map<String, FunctionValue> methods = new HashMap<>();
+    private final Map<String, Value> fields;
+    private final Map<String, FunctionValue> methods;
 
     /**
      * Instantiating an object
      */
     public ClassValue(String className, Context c, List<Value> params) {
-        Classes.ScarpetClass declarer = Classes.getClass(className);
+        Classes.ScarpetClass declarer = Classes.getClass(c.host, className);
 
         this.context = c;
         this.className = className;
@@ -62,11 +62,11 @@ public class ClassValue extends Value implements ContainerValueInterface {
     public ClassValue(String className, Context c, Map<String, Value> fields) {
         this.context = c;
         this.className = className;
-        Set<String> fieldKeys = Classes.getClass(className).fields.keySet();
+        Set<String> fieldKeys = Classes.getClass(c.host, className).fields.keySet();
         if (!fieldKeys.equals(fields.keySet()))//todo test with wrong fields
             throw new InternalExpressionException("Mismatched fields, class '" + className + "' requires fields like [" + StringUtils.join(fieldKeys, ", ") + "]");
         this.fields = fields;
-        this.methods = Classes.getClass(className).methods;
+        this.methods = Classes.getClass(c.host, className).methods;
     }
 
     public boolean hasMember(String member) {
@@ -97,7 +97,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
             FunctionValue initFunc = methods.get(KeywordNames.initMethodName);
             Map<String, LazyValue> outer = ((FunctionValueAccessorMixin) initFunc).getOuterState();
 
-            if (outer != null)
+            if (outer != null) //todo test with outer() stuff in init function
                 throw new InternalExpressionException("How did we get here? Had non-null outer scope at initialisation, make an issue at https://github.com/Ghoulboy78/Classes-scarpet-extension/issues");
 
             outer = new HashMap<>();
@@ -142,6 +142,10 @@ public class ClassValue extends Value implements ContainerValueInterface {
         return callMethod(context, name, List.of(params)).evalValue(context);
     }
 
+    private InternalExpressionException undefinedMethod(String name) {
+        return new InternalExpressionException("Did not define " + name + " for '" + className + "' class value");
+    }
+
     /**
      * This will be accessed via {@code type()} function,
      * whereas {@link ClassValue#className} will be accessed via {@code class_name()} function
@@ -168,8 +172,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
             return callMethod(context, KeywordNames.booleanMethodName, List.of()).evalValue(context, Context.BOOLEAN).getBoolean();
         }
 
-        //todo possibly replace with null check
-        throw new InternalExpressionException("Did not define '" + KeywordNames.booleanMethodName + "' for class value");
+        throw undefinedMethod("'" + KeywordNames.booleanMethodName + "'");
     }
 
     @Override
@@ -211,7 +214,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
             return callMethod(KeywordNames.splitMethodName, delimiter);
         }
 
-        throw new InternalExpressionException("Did not define 'split' for class value");
+        throw undefinedMethod("'split'");
     }
 
     @Override
@@ -221,7 +224,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
             return callMethod(KeywordNames.sliceMethodName, NumericValue.of(from), NumericValue.of(to));
         }
 
-        throw new InternalExpressionException("Did not define 'slice' for class value");
+        throw undefinedMethod("'slice'");
     }
 
 
@@ -298,7 +301,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
             return (int) callMethod(KeywordNames.comparisonOperationMask, other).readInteger();
         }
 
-        throw new InternalExpressionException("Did not define comparison for class value");
+        throw undefinedMethod("comparison");
     }
 
 
@@ -309,7 +312,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
             return callMethod(KeywordNames.addOperationMask, other);
         }
 
-        throw new InternalExpressionException("Did not define addition behaviour for class value");
+        throw undefinedMethod("addition behaviour");
     }
 
     @Override
@@ -319,7 +322,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
             return callMethod(KeywordNames.minusOperationMask, other);
         }
 
-        throw new InternalExpressionException("Did not define subtraction behaviour for class value");
+        throw undefinedMethod("subtraction behaviour");
     }
 
     @Override
@@ -329,7 +332,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
             return callMethod(KeywordNames.timesOperationMask, other);
         }
 
-        throw new InternalExpressionException("Did not define multiplication behaviour for class value");
+        throw undefinedMethod("multiplication behaviour");
     }
 
     @Override
@@ -339,7 +342,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
             return callMethod(KeywordNames.divideOperationMask, other);
         }
 
-        throw new InternalExpressionException("Did not define division behaviour for class value");
+        throw undefinedMethod("division behaviour");
     }
 
     @Override
