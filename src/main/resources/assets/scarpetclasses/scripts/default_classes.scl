@@ -5,7 +5,6 @@ declare_class('Object', {
     'str'-> _()-> class_name(this) + '@' + call_function(this, 'hash'),
     'hash'-> _()-> hash(this),
     'number'-> _()-> length(str(this)),
-    'clone'-> _()-> copy(this),
     'bool'-> _()-> bool(call_function(this, 'number')),
     'compare'->_(other)-> call_function(this, 'number') - call_function(other, 'number'),
     'length'-> _()-> length(str(this)),
