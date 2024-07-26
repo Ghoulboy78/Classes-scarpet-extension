@@ -1,5 +1,6 @@
 package scarpetclasses.mixins;
 
+import carpet.CarpetSettings;
 import carpet.script.CarpetScriptHost;
 import carpet.script.CarpetScriptServer;
 import carpet.utils.Messenger;
@@ -20,7 +21,8 @@ public class CarpetScriptServerInjectionMixin {
 
     @Inject(method = "removeScriptHost", at = @At("HEAD"), remap = false)
     private void removeModuleClasses(ServerCommandSource source, String name, boolean notifySource, boolean isRuleApp, CallbackInfoReturnable<Boolean> cir) {
-        Messenger.m(source, "gi Removing classes from host "+name);
+        if(CarpetSettings.superSecretSetting)
+            Messenger.m(source, "gi Removing classes from host "+name);
         Classes.clearDeclaredClasses(modules.get(name));
     }
 }

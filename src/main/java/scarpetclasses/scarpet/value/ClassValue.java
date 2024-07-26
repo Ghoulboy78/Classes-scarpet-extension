@@ -102,7 +102,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
             outer = new HashMap<>();
             outer.put(KeywordNames.selfReference, (_c, _t) -> this);
-            //todo This is where 'super' will go once inheritance is implemented
+            //todo This is where 'super' will go once inheritance is implemented, will have to test overriding as well as using super's methods then
             ((FunctionValueAccessorMixin) initFunc).setOuterState(outer);
             initFunc.callInContext(context, Context.NONE, params);
 

@@ -1,0 +1,31 @@
+//todo see if better name can be found
+
+declare_class('Object', {
+    '__init__'-> _()-> throw('Cannot initialize class of '+class_name(this)),
+    'str'-> _()-> class_name(this) + '@' + call_function(this, 'hash'),
+    'hash'-> _()-> hash(this),
+    'number'-> _()-> length(str(this)),
+    'clone'-> _()-> copy(this),
+    'bool'-> _()-> bool(call_function(this, 'number')),
+    'compare'->_(other)-> call_function(this, 'number') - call_function(other, 'number'),
+    'length'-> _()-> length(str(this)),
+    'nbt'-> _()-> nbt(str(this)),
+    'json'-> _()-> encode_json(str(this)),
+});
+
+declare_class('Interface', {
+    '__init__'->_(self)->throw('Cannot initialize an interface class'),
+});
+
+declare_class('Iterator', {
+    'has_next'->_(self)->null, // todo some way of defining abstract methods (a looong way off tho)
+    'next'->_(self)->null,
+    'for_each'->_(self, function)->(
+        while(call_function(self, 'has_next'), 0x7FFFFFFFFFFFFFFF,
+            next = call(self:'next', self);
+            if(next==null, break());
+            call(function, next:1);
+        );
+        self
+    ),
+}, 'Interface');

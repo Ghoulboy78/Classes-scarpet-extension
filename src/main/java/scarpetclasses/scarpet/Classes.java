@@ -14,14 +14,16 @@ import java.util.Set;
  * A place to store declared classes, and a place to retrieve them afterwards
  */
 public class Classes {
+
     //todo add option to make these visible universally (instead of by app / ScriptHost object)
-    //todo add default classes here
+    //todo make it so (after implementing inheritance) that if the user imports the default classes library, all created classes will inherit from Objects (and this will also enable interfaces, etc.)
     private static final Map<ScriptHost, Map<String, ScarpetClass>> declaredClasses = new HashMap<>();
 
     public static void addNewClassDef(ScriptHost host, String className, Map<Value, Value> members) {
         if (!declaredClasses.containsKey(host))
             declaredClasses.put(host, new HashMap<>());
 
+        //host.getName()
 
         if (declaredClasses.get(host).containsKey(className)) //todo possible add overwrite option?
             throw new InternalExpressionException("Already defined class '" + className + "'");
