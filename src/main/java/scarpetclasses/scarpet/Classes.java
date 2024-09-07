@@ -1,14 +1,24 @@
 package scarpetclasses.scarpet;
 
+import carpet.script.CarpetContext;
+import carpet.script.CarpetExpression;
+import carpet.script.CarpetScriptHost;
+import carpet.script.Context;
 import carpet.script.ScriptHost;
+import carpet.script.Module;
 import carpet.script.exception.InternalExpressionException;
 import carpet.script.value.FunctionValue;
+import carpet.script.value.StringValue;
 import carpet.script.value.Value;
+import scarpetclasses.mixins.ScriptHostMixin;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
+import static scarpetclasses.ScarpetClasses.defaultClassScriptName;
+import static scarpetclasses.ScarpetClasses.defaultClassConfigInclude;
 
 /**
  * A place to store declared classes, and a place to retrieve them afterwards
@@ -19,11 +29,32 @@ public class Classes {
     //todo make it so (after implementing inheritance) that if the user imports the default classes library, all created classes will inherit from Objects (and this will also enable interfaces, etc.)
     private static final Map<ScriptHost, Map<String, ScarpetClass>> declaredClasses = new HashMap<>();
 
-    public static void addNewClassDef(ScriptHost host, String className, Map<Value, Value> members) {
-        if (!declaredClasses.containsKey(host))
+    public static void addNewClassDef(Context c, String className, Map<Value, Value> members) {
+        ScriptHost host = c.host;
+
+        Map<Value, Value> config = ((CarpetScriptHost) host).appConfig;
+        boolean hasDefaultClasses = config.containsKey(StringValue.of(defaultClassConfigInclude)) && config.get(StringValue.of(defaultClassConfigInclude)).getBoolean();
+
+        if (!declaredClasses.containsKey(host)) {//Initialising class-based stuff for this app
             declaredClasses.put(host, new HashMap<>());
 
-        //host.getName()
+            //If user wants default classes in config
+            if(hasDefaultClasses) {
+                Module defaultClasses = Module.fromJarPath("assets/scarpetclasses/scripts/", defaultClassScriptName, true);
+
+                //Repurposed code from ScriptHost#importModule(Context c, String moduleName)
+                ((ScriptHostMixin) host).getModules().put(defaultClasses.name(), defaultClasses);
+                ScriptHost.ModuleData data = new ScriptHost.ModuleData(defaultClasses);
+                //host.initializeModuleGlobals(data); This is unnecesary, but keeping it here in case it causes problems and needs to be done
+                ((ScriptHostMixin) host).getModuleData().put(defaultClasses, data);
+
+                //Repurposed code from CarpetScriptHost#runModuleCode(Context c, Module module)
+                CarpetContext cc = (CarpetContext) c;
+                CarpetExpression ex = new CarpetExpression(defaultClasses, defaultClasses.code(), cc.source(), cc.origin());
+                ex.getExpr().asATextSource();
+                ex.scriptRunCommand(host, cc.origin());
+            }
+        }
 
         if (declaredClasses.get(host).containsKey(className)) //todo possible add overwrite option?
             throw new InternalExpressionException("Already defined class '" + className + "'");

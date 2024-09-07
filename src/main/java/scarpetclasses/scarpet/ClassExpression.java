@@ -34,8 +34,10 @@ public class ClassExpression {
             if (lv.size() == 1)
                 throw new InternalExpressionException("Must declare a class with at least a name and map of fields and methods");
 
-            if (lv.get(1) instanceof MapValue map) Classes.addNewClassDef(c.host, lv.get(0).getString(), map.getMap());
-            else throw new InternalExpressionException("Must declare a class with a map of fields and methods");
+            if (lv.get(1) instanceof MapValue map) {
+                Classes.addNewClassDef(c, lv.get(0).getString(), map.getMap());
+            } else
+                throw new InternalExpressionException("Must declare a class with a map of fields and methods");
 
             return lv.get(0);//returning name of the new class
         });
