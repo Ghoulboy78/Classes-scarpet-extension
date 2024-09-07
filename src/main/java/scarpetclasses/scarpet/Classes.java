@@ -43,13 +43,11 @@ public class Classes {
     }
 
     /**
-     * For getting rid of declared classes between loads and reloads
+     * For getting rid of declared classes between loads and reloads (if host contains classes)
      */
     public static void clearDeclaredClasses(ScriptHost host) {
-        if (!declaredClasses.containsKey(host)) //todo test with an app which doesn't declare any classes
-            throw new InternalExpressionException("How did we get here? Tried to clear declared classes without having any entry for this app");
-
-        declaredClasses.get(host).clear();
+        if (declaredClasses.containsKey(host))
+            declaredClasses.get(host).clear();
     }
 
     public static Set<String> getDeclaredClassNames(ScriptHost host) {
