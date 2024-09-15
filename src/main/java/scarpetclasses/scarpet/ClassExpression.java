@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import static scarpetclasses.ScarpetClasses.LOGGER;
 import static scarpetclasses.scarpet.value.ClassValue.KeywordNames.typeString;
 
 public class ClassExpression {
@@ -84,6 +85,8 @@ public class ClassExpression {
      * A separate method for the overwrites in case they break stuff
      */
     public static void applyOverwrite(CarpetExpression cexpr) {
+        LOGGER.info("Overwriting native scarpet functions with classes-compatible ones");
+
         Expression expr = cexpr.getExpr();
 
         expr.addUnaryFunction("encode_b64", v -> {
@@ -91,7 +94,7 @@ public class ClassExpression {
             return StringValue.of(Base64.getEncoder().encodeToString(v.getString().getBytes(StandardCharsets.UTF_8)));
         });
 
-        expr.addContextFunction("parse_nbt", 1, (c, t, lv) -> {
+        expr.addContextFunction("parse_nbt", 1, (c, t, lv) -> { //todo encode_nbt as well ig?
             Value v = lv.getFirst();
             if (v instanceof final NBTSerializableValue nbtsv) {
                 NbtElement tag = nbtsv.getTag();

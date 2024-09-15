@@ -57,7 +57,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
     }
 
     /**
-     * Creating an object, though it may have unexpected values for fields.
+     * Creating an object that's already initialised, though it may have unexpected values for fields.
      */
     public ClassValue(String className, Context c, Map<String, Value> fields) {
         this.context = c;
@@ -106,7 +106,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
             ((FunctionValueAccessorMixin) initFunc).setOuterState(outer);
             initFunc.callInContext(context, Context.NONE, params);
 
-            //No need to let the programmer re-initialise an initialised object
+            //No need to let the programmer re-initialise an initialised object. Redundant since we don't allow it anyway, but better be safe than sorry
             methods.remove(KeywordNames.initMethodName);
         }
     }
@@ -189,7 +189,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
     @NotNull
     public Value deepcopy() {
         if (hasMethod(KeywordNames.deepCopyMethodName)) {
-            return callMethod(KeywordNames.deepCopyMethodName);//.deepcopy(); ?
+            return callMethod(KeywordNames.deepCopyMethodName);//todo .deepcopy(); ?
         }
 
         Map<String, Value> copiedFields = new HashMap<>();

@@ -39,7 +39,7 @@ public class Classes {
             declaredClasses.put(host, new HashMap<>());
 
             //If user wants default classes in config
-            if(hasDefaultClasses) {
+            if(hasDefaultClasses) { //todo see if running this every time a class declared instead of on startup causes problems down the line
                 Module defaultClasses = Module.fromJarPath("assets/scarpetclasses/scripts/", defaultClassScriptName, true);
 
                 //Repurposed code from ScriptHost#importModule(Context c, String moduleName)
