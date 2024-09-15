@@ -63,7 +63,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
         this.context = c;
         this.className = className;
         Set<String> fieldKeys = Classes.getClass(c.host, className).fields.keySet();
-        if (!fieldKeys.equals(fields.keySet()))//todo test with wrong fields
+        if (!fieldKeys.equals(fields.keySet()))//todo test loading a class with wrong fields
             throw new InternalExpressionException("Mismatched fields, class '" + className + "' requires fields like [" + StringUtils.join(fieldKeys, ", ") + "]");
         this.fields = fields;
         this.methods = Classes.getClass(c.host, className).methods;
