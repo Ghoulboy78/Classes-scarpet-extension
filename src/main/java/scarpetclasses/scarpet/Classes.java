@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static scarpetclasses.ScarpetClasses.LOGGER;
 import static scarpetclasses.ScarpetClasses.defaultClassScriptName;
 import static scarpetclasses.ScarpetClasses.defaultClassConfigInclude;
 
@@ -77,8 +78,15 @@ public class Classes {
      * For getting rid of declared classes between loads and reloads (if host contains classes)
      */
     public static void clearDeclaredClasses(ScriptHost host) {
-        if (declaredClasses.containsKey(host))
+        if (declaredClasses.containsKey(host)) {
+            Set<String> classes = declaredClasses.get(host).keySet();
+
+            if(!classes.isEmpty()) {
+                LOGGER.info("Removing %d classes from module %s: %s".formatted(classes.size(), host.getName(), classes));
+            }
+
             declaredClasses.get(host).clear();
+        }
     }
 
     public static Set<String> getDeclaredClassNames(ScriptHost host) {

@@ -85,6 +85,7 @@ public class ClassExpression {
      * A separate method for the overwrites in case they break stuff
      */
     public static void applyOverwrite(CarpetExpression cexpr) {
+        //todo remove this annoying message once carpet rule is implemented
         LOGGER.info("Overwriting native scarpet functions with classes-compatible ones");
 
         Expression expr = cexpr.getExpr();
