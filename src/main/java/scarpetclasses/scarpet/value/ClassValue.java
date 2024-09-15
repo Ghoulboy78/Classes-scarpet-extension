@@ -1,10 +1,12 @@
 package scarpetclasses.scarpet.value;
 
+import carpet.script.CarpetScriptHost;
 import carpet.script.Context;
 import carpet.script.LazyValue;
 import carpet.script.exception.InternalExpressionException;
 import carpet.script.exception.ThrowStatement;
 import carpet.script.exception.Throwables;
+import carpet.script.external.Carpet;
 import carpet.script.value.BooleanValue;
 import carpet.script.value.ContainerValueInterface;
 import carpet.script.value.FunctionValue;
@@ -28,6 +30,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static scarpetclasses.ScarpetClasses.LOGGER;
 
 public class ClassValue extends Value implements ContainerValueInterface {
 
@@ -97,10 +101,14 @@ public class ClassValue extends Value implements ContainerValueInterface {
             FunctionValue initFunc = methods.get(KeywordNames.initMethodName);
             Map<String, LazyValue> outer = ((FunctionValueAccessorMixin) initFunc).getOuterState();
 
-            if (outer != null) //todo test with outer() stuff in init function
-                throw new InternalExpressionException("How did we get here? Had non-null outer scope at initialisation, make an issue at https://github.com/Ghoulboy78/Classes-scarpet-extension/issues");
+            if (outer==null) {
+                outer = new HashMap<>();
+            } else if(outer.containsKey(KeywordNames.selfReference)){ //This is a mistake that can be corrected, but that should not go unnoticed
+                String msg = "Tried to override '%s' variable in class '%s' initialisation with an outer scope variable of the same name. This is bad practice and will be overwritten.".formatted(KeywordNames.selfReference, className);
+                LOGGER.warn(msg);
+                Carpet.Messenger_message(((CarpetScriptHost)context.host).responsibleSource, "r "+msg);
+            } //A similar thing for 'super'
 
-            outer = new HashMap<>();
             outer.put(KeywordNames.selfReference, (_c, _t) -> this);
             //todo This is where 'super' will go once inheritance is implemented, will have to test overriding as well as using super's methods then
             ((FunctionValueAccessorMixin) initFunc).setOuterState(outer);
