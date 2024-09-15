@@ -1,6 +1,7 @@
 package scarpetclasses.scarpet;
 
 import carpet.script.CarpetExpression;
+import carpet.script.CarpetScriptHost;
 import carpet.script.Expression;
 import carpet.script.exception.InternalExpressionException;
 import carpet.script.value.FunctionValue;
@@ -9,6 +10,7 @@ import carpet.script.value.MapValue;
 import carpet.script.value.NBTSerializableValue;
 import carpet.script.value.StringValue;
 import carpet.script.value.Value;
+import carpet.utils.Messenger;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import scarpetclasses.scarpet.value.ClassValue;
