@@ -143,7 +143,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
     }
 
     private InternalExpressionException undefinedMethod(String name) {
-        return new InternalExpressionException("Did not define " + name + " for '" + className + "' class value");
+        return new InternalExpressionException("Did not define " + name + " for class '" + className + "'");
     }
 
     /**
@@ -214,7 +214,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
             return callMethod(KeywordNames.splitMethodName, delimiter);
         }
 
-        throw undefinedMethod("'split'");
+        throw undefinedMethod("'" + KeywordNames.splitMethodName + "'");
     }
 
     @Override
@@ -224,7 +224,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
             return callMethod(KeywordNames.sliceMethodName, NumericValue.of(from), NumericValue.of(to));
         }
 
-        throw undefinedMethod("'slice'");
+        throw undefinedMethod("'" + KeywordNames.sliceMethodName + "'");
     }
 
 
@@ -301,7 +301,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
             return (int) callMethod(KeywordNames.comparisonOperationMask, other).readInteger();
         }
 
-        throw undefinedMethod("comparison");
+        throw undefinedMethod("comparison behaviour");
     }
 
 

@@ -12,7 +12,7 @@ declare_class('Object', {
     'json'-> _()-> encode_json(str(this)),
 });
 
-declare_class('Interface', {
+declare_class('Interface', { //todo make interfaces separate from classes, with declare_interface() function
     '__init__'->_(self)->throw('Cannot initialize an interface class'),
 });
 
