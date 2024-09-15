@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 import java.util.Map;
 
 @Mixin(FunctionValue.class)
-public interface FunctionValueAccessorMixin {
+public interface FunctionValueMixin {
     @Accessor(value = "outerState", remap = false)
     Map<String, LazyValue> getOuterState();
 

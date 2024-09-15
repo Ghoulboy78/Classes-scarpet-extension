@@ -3,9 +3,9 @@
   "package": "scarpetclasses.mixins",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "CarpetScriptHostInjectionMixin",
-    "CarpetScriptServerInjectionMixin",
-    "FunctionValueAccessorMixin",
+    "CarpetScriptHostMixin",
+    "CarpetScriptServerMixin",
+    "FunctionValueMixin",
     "ScriptHostMixin"
   ],
   "client": [

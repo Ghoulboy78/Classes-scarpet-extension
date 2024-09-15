@@ -14,7 +14,7 @@ import java.util.Map;
 
 
 @Mixin(CarpetScriptServer.class)
-public class CarpetScriptServerInjectionMixin {
+public class CarpetScriptServerMixin {
     @Shadow
     public Map<String, CarpetScriptHost> modules;
 

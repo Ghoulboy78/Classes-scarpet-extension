@@ -18,7 +18,7 @@ import static scarpetclasses.ScarpetClasses.defaultClassConfigInclude;
 import static scarpetclasses.ScarpetClasses.defaultClassScriptName;
 
 @Mixin(CarpetScriptHost.class)
-public abstract class CarpetScriptHostInjectionMixin {
+public abstract class CarpetScriptHostMixin {
 
     //this is code that in theory should run when __config() is read, but in practice I can't get it to work.
     //@Inject(method = "readConfig", at = @At(value = "INVOKE_ASSIGN", target = "Ljava/util/Map;getOrDefault(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"), locals = LocalCapture.CAPTURE_FAILSOFT, remap = false)

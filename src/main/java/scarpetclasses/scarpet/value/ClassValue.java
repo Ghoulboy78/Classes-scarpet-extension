@@ -10,20 +10,18 @@ import carpet.script.external.Carpet;
 import carpet.script.value.BooleanValue;
 import carpet.script.value.ContainerValueInterface;
 import carpet.script.value.FunctionValue;
-import carpet.script.value.ListValue;
 import carpet.script.value.MapValue;
 import carpet.script.value.NBTSerializableValue;
 import carpet.script.value.NumericValue;
 import carpet.script.value.StringValue;
 import carpet.script.value.Value;
-import carpet.utils.Messenger;
 import com.google.gson.JsonElement;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.registry.DynamicRegistryManager;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
-import scarpetclasses.mixins.FunctionValueAccessorMixin;
+import scarpetclasses.mixins.FunctionValueMixin;
 import scarpetclasses.scarpet.Classes;
 
 import java.nio.charset.StandardCharsets;
@@ -58,7 +56,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
         this.context = c;
         this.className = className;
         this.fields = declarer.fields.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().deepcopy()));
-        this.methods = declarer.methods.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> (FunctionValue) ((FunctionValueAccessorMixin) e.getValue()).cloneFunction()));
+        this.methods = declarer.methods.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> (FunctionValue) ((FunctionValueMixin) e.getValue()).cloneFunction()));
 
         initializeCall(params);
     }
@@ -102,7 +100,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
     private void initializeCall(List<Value> params) {
         if (methods.containsKey(KeywordNames.initMethodName)) {
             FunctionValue initFunc = methods.get(KeywordNames.initMethodName);
-            Map<String, LazyValue> outer = ((FunctionValueAccessorMixin) initFunc).getOuterState();
+            Map<String, LazyValue> outer = ((FunctionValueMixin) initFunc).getOuterState();
 
             if (outer == null) {
                 outer = new HashMap<>();
@@ -114,7 +112,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
             outer.put(KeywordNames.selfReference, (_c, _t) -> this);
             //todo This is where 'super' will go once inheritance is implemented, will have to test overriding as well as using super's methods then
-            ((FunctionValueAccessorMixin) initFunc).setOuterState(outer);
+            ((FunctionValueMixin) initFunc).setOuterState(outer);
             initFunc.callInContext(context, Context.NONE, params);
 
             //No need to let the programmer re-initialise an initialised object. Redundant since we don't allow it anyway, but better be safe than sorry
@@ -133,7 +131,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
             throw new InternalExpressionException("Tried to initialise a class improperly, note that this must be done with 'new_object()' function to avoid unwanted side-effects (and ensure wanted ones)");
 
         FunctionValue func = methods.get(name);
-        Map<String, LazyValue> outer = ((FunctionValueAccessorMixin) func).getOuterState();
+        Map<String, LazyValue> outer = ((FunctionValueMixin) func).getOuterState();
         //If it's empty, then it gets set to null, which I totally missed out on
         //thx replaceitem
         if (outer == null)
@@ -141,7 +139,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
         outer.put(KeywordNames.selfReference, (_c, _t) -> this);
         //todo This is where 'super' will go once inheritance is implemented
-        ((FunctionValueAccessorMixin) func).setOuterState(outer);
+        ((FunctionValueMixin) func).setOuterState(outer);
         return func.callInContext(c, Context.NONE, params);
     }
 
