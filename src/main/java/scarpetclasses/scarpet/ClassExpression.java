@@ -87,7 +87,7 @@ public class ClassExpression {
      * A separate method for the overwrites in case they break stuff
      */
     public static void applyOverwrite(CarpetExpression cexpr) {
-        //todo remove this annoying message once carpet rule is implemented
+        //Keeping this annoying message in logs, because the rule is off by default, and turning it on without knowing the full consequences will cause errors.
         LOGGER.info("Overwriting native scarpet functions with classes-compatible ones");
 
         Expression expr = cexpr.getExpr();
@@ -102,7 +102,7 @@ public class ClassExpression {
             if (v instanceof final NBTSerializableValue nbtsv) {
                 NbtElement tag = nbtsv.getTag();
 
-                //todo add some config check to enable or disable this, with note about instability of this whole thing
+                //todo issue deprecation warning or smth ig?
                 if (tag instanceof NbtCompound ctag && Classes.hasClass(c.host, ctag.getString(typeString))) {
                     Map<String, Value> fields = new HashMap<>();
                     String className = ctag.getString(typeString);

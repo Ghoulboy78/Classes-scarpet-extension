@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "scarpetclasses",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "name": "Scarpet Classes extension",
   "description": "This is an example description! Tell everyone what your mod is about!",
   "authors": [

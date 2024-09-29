@@ -1,0 +1,4 @@
+{
+  "scarpetclasses.rule.overwriteNativeFunctions.desc": "Allows overwriting of some native Scarpet functions with classes-compatible ones.",
+  "scarpetclasses.rule.overwriteNativeFunctions.extra": "Defaults to false because it enabled wonky behaviour like turning class-like values into nbt and vice versa, which isn't rly intended. Also setting this rule TRUE after loading apps that require it will probably break them, this is intended."
+}
