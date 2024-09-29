@@ -68,8 +68,9 @@ public class ClassValue extends Value implements ContainerValueInterface {
         this.context = c;
         this.className = className;
         Set<String> fieldKeys = Classes.getClass(c.host, className).fields.keySet();
-        if (!fieldKeys.equals(fields.keySet()))//todo test loading a class with wrong fields
-            throw new InternalExpressionException("Mismatched fields, class '" + className + "' requires fields like [" + StringUtils.join(fieldKeys, ", ") + "]");
+        if (!fieldKeys.equals(fields.keySet()))
+            throw new InternalExpressionException("Mismatched fields, class '" + className + "' requires fields like (" + StringUtils.join(fieldKeys, ", ") + ")");
+        
         this.fields = fields;
         this.methods = Classes.getClass(c.host, className).methods;
     }
@@ -198,13 +199,10 @@ public class ClassValue extends Value implements ContainerValueInterface {
     @NotNull
     public Value deepcopy() {
         if (hasMethod(KeywordNames.deepCopyMethodName)) {
-            return callMethod(KeywordNames.deepCopyMethodName);//todo .deepcopy(); ?
+            return callMethod(KeywordNames.deepCopyMethodName);//Not using .deepcopy(), but keeping a comment here in case problems arise
         }
 
-        Map<String, Value> copiedFields = new HashMap<>();
-        fields.forEach((s, v) -> copiedFields.put(s, v.deepcopy()));
-
-        return new ClassValue(className, context, copiedFields);
+        return new ClassValue(className, context, fields);
     }
 
     @Override

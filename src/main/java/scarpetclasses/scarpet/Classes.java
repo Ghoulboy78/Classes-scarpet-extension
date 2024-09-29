@@ -26,7 +26,7 @@ import static scarpetclasses.ScarpetClasses.defaultClassConfigInclude;
  */
 public class Classes {
 
-    //todo add option to make these visible universally (instead of by app / ScriptHost object)
+    //todo add option to make these visible universally (instead of by app / ScriptHost object), so all declared classes are visible in all apps
     //todo make it so (after implementing inheritance) that if the user imports the default classes library, all created classes will inherit from Objects (and this will also enable interfaces, etc.)
     private static final Map<ScriptHost, Map<String, ScarpetClass>> declaredClasses = new HashMap<>();
 
