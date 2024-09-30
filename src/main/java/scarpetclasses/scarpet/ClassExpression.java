@@ -1,7 +1,6 @@
 package scarpetclasses.scarpet;
 
 import carpet.script.CarpetExpression;
-import carpet.script.CarpetScriptHost;
 import carpet.script.Expression;
 import carpet.script.exception.InternalExpressionException;
 import carpet.script.value.FunctionValue;
@@ -10,7 +9,6 @@ import carpet.script.value.MapValue;
 import carpet.script.value.NBTSerializableValue;
 import carpet.script.value.StringValue;
 import carpet.script.value.Value;
-import carpet.utils.Messenger;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import scarpetclasses.scarpet.value.ClassValue;
@@ -97,12 +95,11 @@ public class ClassExpression {
             return StringValue.of(Base64.getEncoder().encodeToString(v.getString().getBytes(StandardCharsets.UTF_8)));
         });
 
-        expr.addContextFunction("parse_nbt", 1, (c, t, lv) -> { //todo encode_nbt as well ig?
+        expr.addContextFunction("parse_nbt", 1, (c, t, lv) -> {
             Value v = lv.getFirst();
             if (v instanceof final NBTSerializableValue nbtsv) {
                 NbtElement tag = nbtsv.getTag();
 
-                //todo issue deprecation warning or smth ig?
                 if (tag instanceof NbtCompound ctag && Classes.hasClass(c.host, ctag.getString(typeString))) {
                     Map<String, Value> fields = new HashMap<>();
                     String className = ctag.getString(typeString);
