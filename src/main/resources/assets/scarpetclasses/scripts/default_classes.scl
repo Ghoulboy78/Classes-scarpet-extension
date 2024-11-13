@@ -1,4 +1,4 @@
-//todo see if better name can be found
+//todo see if better name can be found for this script
 
 declare_class('Object', {
     '__init__'-> _()-> throw('Cannot initialize class of '+class_name(this)),

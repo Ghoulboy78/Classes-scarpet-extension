@@ -38,14 +38,20 @@ import static scarpetclasses.ScarpetClasses.LOGGER;
 public class ClassValue extends Value implements ContainerValueInterface {
 
     /**
-     * The name of this user-defined class, or the name of the user-defined class that this object belongs to.
+     * The name of the user-defined class that this object is instantiated from
      */
     public final String className;
     /**
      * Context from when this was declared
      */
     private final Context context;
+    /**
+     * Object fields. Todo implement public and private fields and methods maybe
+     */
     private final Map<String, Value> fields;
+    /**
+     * Object methods
+     */
     private final Map<String, FunctionValue> methods;
 
     /**
