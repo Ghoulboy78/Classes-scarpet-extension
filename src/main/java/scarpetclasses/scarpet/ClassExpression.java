@@ -3,6 +3,7 @@ package scarpetclasses.scarpet;
 import carpet.script.CarpetExpression;
 import carpet.script.Expression;
 import carpet.script.exception.InternalExpressionException;
+import carpet.script.value.BooleanValue;
 import carpet.script.value.FunctionValue;
 import carpet.script.value.ListValue;
 import carpet.script.value.MapValue;
@@ -46,10 +47,18 @@ public class ClassExpression {
         addUnaryClassFunction(expr, "class_name", c -> StringValue.of(c.className));
         addUnaryClassFunction(expr, "class_fields", c -> ListValue.wrap(c.getFields().keySet().stream().map(StringValue::of)));
         addUnaryClassFunction(expr, "class_methods", c -> ListValue.wrap(c.getMethods().keySet().stream().map(StringValue::of)));
+        addUnaryClassFunction(expr, "class_parents", c -> ListValue.wrap(c.parents.stream().map(StringValue::of)));
+
+        expr.addBinaryFunction("instance_of", (v1, v2)->{
+            if (v1 instanceof ClassValue c) {
+                return BooleanValue.of(c.isInstanceOf(v2.getString()));
+            }
+            throw new InternalExpressionException("instance_of requires a class value as first argument, not " + v1.getTypeString());
+        });
 
         expr.addContextFunction("clear_classes", 0, (c, t, lv) -> {
             Classes.clearDeclaredClasses(c.host);
-            return Value.TRUE;
+            return Value.NULL;
         });
 
         expr.addContextFunction("new", -1, (c, t, lv) -> { //possibly change back to 'new_object' for clarity?
@@ -70,7 +79,7 @@ public class ClassExpression {
     }
 
     /**
-     * Simple way of adding {@link ClassValue} based functions, since there are a few of these
+     * Simple way of adding {@link ClassValue} based functions, since there are a few of these which take no argument besides the class variable itself
      */
     public static void addUnaryClassFunction(Expression expr, String name, Function<ClassValue, Value> fun) {
         expr.addUnaryFunction(name, v -> {

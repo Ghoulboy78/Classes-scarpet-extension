@@ -28,6 +28,7 @@ import scarpetclasses.scarpet.ScarpetClass;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -55,6 +56,11 @@ public class ClassValue extends Value implements ContainerValueInterface {
     private final Map<String, FunctionValue> methods;
 
     /**
+     * Class parent names, if applicable. Not gonna store the {@link ScarpetClass} objects unless required
+     */
+    public final Set<String> parents;
+
+    /**
      * Instantiating an object
      */
     public ClassValue(String className, Context c, List<Value> params) {
@@ -64,6 +70,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
         this.className = className;
         this.fields = declarer.fields.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().deepcopy()));
         this.methods = declarer.methods.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> (FunctionValue) ((FunctionValueMixin) e.getValue()).cloneFunction()));
+        this.parents = declarer.parents.stream().map(sc->sc.className).collect(Collectors.toUnmodifiableSet());
 
         initializeCall(params);
     }
@@ -80,6 +87,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
         
         this.fields = fields;
         this.methods = Classes.getClass(c.host, className).methods;
+        this.parents = new HashSet<>(); //todo see abt this, if required
     }
 
     public boolean hasMember(String member) {
@@ -100,6 +108,10 @@ public class ClassValue extends Value implements ContainerValueInterface {
 
     public Map<String, FunctionValue> getMethods() {
         return methods;
+    }
+
+    public boolean isInstanceOf(String otherClass){
+        return className.equals(otherClass) || parents.contains(otherClass);
     }
 
     /**
