@@ -113,37 +113,4 @@ public class Classes {
             return Collections.emptySet();
         return declaredClasses.get(host).keySet();
     }
-
-    /**
-     * Calling it this in order to avoid conflict with {@link Class}
-     */
-    public static class ScarpetClass {
-        public final Map<String, Value> fields = new HashMap<>();
-        public final Map<String, FunctionValue> methods = new HashMap<>();
-        public final String className;
-        public final Set<ScarpetClass> parents = new HashSet<>();
-
-        public ScarpetClass(String name, Map<Value, Value> members) {
-            this.className = name;
-            for (Map.Entry<Value, Value> entry : members.entrySet()) {
-                if (entry.getValue() instanceof FunctionValue f) {
-                    methods.put(entry.getKey().getString(), f);
-                } else {
-                    fields.put(entry.getKey().getString(), entry.getValue());
-                }
-            }
-        }
-
-        public ScarpetClass(String name, Map<Value, Value> members, Set<ScarpetClass> parents) {
-            this.className = name;
-            for (Map.Entry<Value, Value> entry : members.entrySet()) {
-                if (entry.getValue() instanceof FunctionValue f) {
-                    methods.put(entry.getKey().getString(), f);
-                } else {
-                    fields.put(entry.getKey().getString(), entry.getValue());
-                }
-            }
-            this.parents.addAll(parents);
-        }
-    }
 }

@@ -23,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import scarpetclasses.mixins.FunctionValueMixin;
 import scarpetclasses.scarpet.Classes;
+import scarpetclasses.scarpet.ScarpetClass;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -51,7 +52,7 @@ public class ClassValue extends Value implements ContainerValueInterface {
      * Instantiating an object
      */
     public ClassValue(String className, Context c, List<Value> params) {
-        Classes.ScarpetClass declarer = Classes.getClass(c.host, className);
+        ScarpetClass declarer = Classes.getClass(c.host, className);
 
         this.context = c;
         this.className = className;
