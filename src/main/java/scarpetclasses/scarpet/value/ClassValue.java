@@ -412,7 +412,6 @@ public class ClassValue extends Value implements ContainerValueInterface {
         public static final String deepCopyMethodName = "copy";
         /**
          * Name of the method which overwrites behaviour with scarpet {@code encode_nbt()} function
-         * todo make a note that reverse operation is prolly not possible
          */
         public static final String makeNBTMethodName = "to_nbt";
         /**
