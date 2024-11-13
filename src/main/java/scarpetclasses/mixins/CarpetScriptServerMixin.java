@@ -13,12 +13,12 @@ import scarpetclasses.scarpet.Classes;
 import java.util.Map;
 
 
-@Mixin(CarpetScriptServer.class)
+@Mixin(value = CarpetScriptServer.class, remap = false)
 public class CarpetScriptServerMixin {
     @Shadow
     public Map<String, CarpetScriptHost> modules;
 
-    @Inject(method = "removeScriptHost", at = @At("HEAD"), remap = false)
+    @Inject(method = "removeScriptHost", at = @At("HEAD"))
     private void removeModuleClasses(ServerCommandSource source, String name, boolean notifySource, boolean isRuleApp, CallbackInfoReturnable<Boolean> cir) {
         Classes.clearDeclaredClasses(modules.get(name));
     }

@@ -7,11 +7,11 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.Map;
 
-@Mixin(ScriptHost.class)
+@Mixin(value = ScriptHost.class, remap = false)
 public interface ScriptHostMixin {
-    @Accessor(value = "modules", remap = false)
+    @Accessor(value = "modules")
     Map<String, Module> getModules();
 
-    @Accessor(value = "moduleData", remap = false)
+    @Accessor(value = "moduleData")
     Map<Module, ScriptHost.ModuleData> getModuleData();
 }

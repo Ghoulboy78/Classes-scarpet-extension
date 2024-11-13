@@ -17,7 +17,7 @@ import java.util.Map;
 import static scarpetclasses.ScarpetClasses.defaultClassConfigInclude;
 import static scarpetclasses.ScarpetClasses.defaultClassScriptName;
 
-@Mixin(CarpetScriptHost.class)
+@Mixin(value = CarpetScriptHost.class, remap = false)
 public abstract class CarpetScriptHostMixin {
 
     //this is code that in theory should run when __config() is read, but in practice I can't get it to work.
